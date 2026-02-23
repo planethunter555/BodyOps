@@ -39,6 +39,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bodyops.tests
+        GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/BodyOps.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BodyOps"
         BUNDLE_LOADER: "$(TEST_HOST)"
     dependencies:

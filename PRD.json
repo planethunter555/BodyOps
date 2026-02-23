@@ -45,7 +45,7 @@
       "起動時に種目は何も選択されておらず、ユーザーが都度選択する形になっている",
       "xcodebuild test でExercisePresetServiceTestsが全て通る"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase1-task4",
