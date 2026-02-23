@@ -166,7 +166,7 @@
       "グラフはSwiftChartsを使用して実装されている",
       "期間フィルター（1ヶ月・3ヶ月・6ヶ月・全期間）を切り替えられる"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase3-task12",
