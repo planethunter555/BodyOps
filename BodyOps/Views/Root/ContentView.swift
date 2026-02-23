@@ -5,7 +5,7 @@ struct ContentView: View {
         TabView {
             TodayView()
                 .tabItem { Label("今日", systemImage: "calendar") }
-            Text("履歴")
+            HistoryView()
                 .tabItem { Label("履歴", systemImage: "clock.arrow.circlepath") }
             Text("AIアドバイス")
                 .tabItem { Label("アドバイス", systemImage: "brain") }
