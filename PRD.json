@@ -61,7 +61,7 @@
       "delete()後はload()がnilを返す",
       "xcodebuild test でKeychainServiceTestsが全て通る"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase2-task5",
