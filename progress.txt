@@ -9,3 +9,4 @@ DONE phase2-task8: 前回セッション一括コピー機能をWorkoutCopyServi
 DONE phase2-task9: 履歴タブを実装する（カレンダービュー・日別詳細・筋肉グループ別直近日）
 DONE phase2-task10: 設定タブを実装する（プロファイル・目標・LLM選択・Pre-fixプロンプト・通知・カスタム種目・APIキー管理）
 DONE phase3-task11: グラフ画面を実装する（種目別重量推移・総ボリューム推移・筋肉グループ頻度）
+DONE phase3-task12: ローカル通知（トレーニングリマインダー）をNotificationServiceとして実装する

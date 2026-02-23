@@ -182,7 +182,7 @@
       "設定変更後は古い通知がキャンセルされ新しい設定で再登録される",
       "xcodebuild test でNotificationServiceTestsが全て通る"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase4-task13",

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0787761CE9DD46121F7DF8A3 /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD935686F580D50455530119 /* NotificationServiceTests.swift */; };
 		07BB70330042288BB05AAE80 /* ExercisePresetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */; };
 		0A48AAD7F6825C96FDE772FD /* NotificationSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9DED9FA2F5DDA0EA12822 /* NotificationSetting.swift */; };
 		138406F3A9821EE2B17CBC42 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17175B8BE749EB90DD6367B /* ChatMessage.swift */; };
@@ -27,6 +28,7 @@
 		8F78B0B92558489E4437F546 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2971A25301560B81024EEE3 /* SettingsView.swift */; };
 		8F8DCED6AD1E6BBBAFCA4447 /* ExercisePresets.json in Resources */ = {isa = PBXBuildFile; fileRef = 41D38DF06BDCDBCE9C251E3D /* ExercisePresets.json */; };
 		905EE334F5F5560C8B8EBA2B /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79A47EE7383986121FCEEB50 /* TodayView.swift */; };
+		A5CE4CFB7332DC3A886AD642 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE495FE62D3AF8789468257C /* NotificationService.swift */; };
 		AE4A7D1830E634D56900F9D7 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BCC8D85B066F0248D6D6BF /* KeychainService.swift */; };
 		B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */; };
 		D661C11BCE186BC04DBA15B4 /* WorkoutSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */; };
@@ -71,9 +73,11 @@
 		D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSetting.swift; sourceTree = "<group>"; };
 		D80AE13CA86E0212DD1FB759 /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSession.swift; sourceTree = "<group>"; };
+		DD935686F580D50455530119 /* NotificationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationServiceTests.swift; sourceTree = "<group>"; };
 		E17AE53BB96EDBB462936E2F /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		EAB9C8CFCFC5FA086ED59D1A /* CalendarExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarExtensions.swift; sourceTree = "<group>"; };
 		ECB9DED9FA2F5DDA0EA12822 /* NotificationSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSetting.swift; sourceTree = "<group>"; };
+		EE495FE62D3AF8789468257C /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		F17175B8BE749EB90DD6367B /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		F30AF7DEF61D74A9196793E9 /* WorkoutCopyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCopyService.swift; sourceTree = "<group>"; };
 		F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePresetService.swift; sourceTree = "<group>"; };
@@ -106,6 +110,7 @@
 			children = (
 				F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */,
 				25BCC8D85B066F0248D6D6BF /* KeychainService.swift */,
+				EE495FE62D3AF8789468257C /* NotificationService.swift */,
 				F30AF7DEF61D74A9196793E9 /* WorkoutCopyService.swift */,
 			);
 			path = Services;
@@ -177,6 +182,7 @@
 				9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */,
 				3069A86FDD6499591A73D469 /* ExercisePresetServiceTests.swift */,
 				0441871ABDC563C063788A35 /* KeychainServiceTests.swift */,
+				DD935686F580D50455530119 /* NotificationServiceTests.swift */,
 				61C98B3A57475E7139D915E1 /* WorkoutCopyServiceTests.swift */,
 			);
 			path = BodyOpsTests;
@@ -322,6 +328,7 @@
 				5954ECE988918992693AA9A9 /* BodyOpsTests.swift in Sources */,
 				6A44E5E995E8A4AC45B890ED /* ExercisePresetServiceTests.swift in Sources */,
 				1B3800E8372352B996171DD3 /* KeychainServiceTests.swift in Sources */,
+				0787761CE9DD46121F7DF8A3 /* NotificationServiceTests.swift in Sources */,
 				69317AEABF851C1043C43D63 /* WorkoutCopyServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -343,6 +350,7 @@
 				B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */,
 				E1AC319B883FEC7E4383DFDD /* MealRecord.swift in Sources */,
 				6DD467E5A46808397EE7C15E /* MealRecordSheet.swift in Sources */,
+				A5CE4CFB7332DC3A886AD642 /* NotificationService.swift in Sources */,
 				0A48AAD7F6825C96FDE772FD /* NotificationSetting.swift in Sources */,
 				8F78B0B92558489E4437F546 /* SettingsView.swift in Sources */,
 				905EE334F5F5560C8B8EBA2B /* TodayView.swift in Sources */,
