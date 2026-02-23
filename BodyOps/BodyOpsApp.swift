@@ -3,11 +3,8 @@ import SwiftData
 
 @main
 struct BodyOpsApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-        .modelContainer(for: [
+    let container: ModelContainer = {
+        let schema = Schema([
             UserProfile.self,
             Exercise.self,
             WorkoutSession.self,
@@ -17,5 +14,19 @@ struct BodyOpsApp: App {
             NotificationSetting.self,
             LLMSetting.self
         ])
+        // swiftlint:disable:next force_try
+        return try! ModelContainer(for: schema)
+    }()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .onAppear {
+                    let context = container.mainContext
+                    let service = ExercisePresetService(context: context)
+                    try? service.seedIfNeeded()
+                }
+        }
+        .modelContainer(container)
     }
 }

@@ -2,3 +2,4 @@ DONE phase1-task1: Xcodeプロジェクト 'BodyOps' を作成し、フォルダ
 DONE phase1-task2: SwiftDataモデルを実装する（UserProfile / Exercise / WorkoutSession / WorkoutSet / ChatMessage / MealRecord / NotificationSetting / LLMSetting）
 DONE phase1-task3: プリセット種目60種をExercisePresets.jsonで定義し、初回起動時にSwiftDataへ投入するExercisePresetServiceを実装する
 DONE phase1-task4: 複数LLMプロバイダー（Claude / OpenAI / Gemini）のAPIキーを安全に管理するKeychainServiceを実装する
+DONE phase2-task5: 今日タブのトップ画面を実装する（日付ナビゲーション・筋トレサマリー・食事サマリー）
