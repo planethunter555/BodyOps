@@ -3,3 +3,5 @@ DONE phase1-task2: SwiftDataモデルを実装する（UserProfile / Exercise / 
 DONE phase1-task3: プリセット種目60種をExercisePresets.jsonで定義し、初回起動時にSwiftDataへ投入するExercisePresetServiceを実装する
 DONE phase1-task4: 複数LLMプロバイダー（Claude / OpenAI / Gemini）のAPIキーを安全に管理するKeychainServiceを実装する
 DONE phase2-task5: 今日タブのトップ画面を実装する（日付ナビゲーション・筋トレサマリー・食事サマリー）
+DONE phase2-task6: 筋トレ記録シートを実装する（種目選択・セット入力・前回値表示・ボリューム自動計算）
+DONE phase2-task7: 種目選択UIを実装する（筋肉グループ別フィルター・検索・カスタム種目追加）

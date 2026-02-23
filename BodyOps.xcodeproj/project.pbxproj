@@ -14,6 +14,7 @@
 		1B3800E8372352B996171DD3 /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0441871ABDC563C063788A35 /* KeychainServiceTests.swift */; };
 		30E05F1C76E0413B19C9C94E /* WorkoutRecordSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B706303810A7484460133DE2 /* WorkoutRecordSheet.swift */; };
 		3EE86521941C8DAC93E56F00 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF56C072AF9DB26469C43DD /* Exercise.swift */; };
+		578338BF24C0E45141AB6EFA /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */; };
 		5954ECE988918992693AA9A9 /* BodyOpsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */; };
 		6506C89C8324B14CC080B86F /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACBBDBFC0C4DAFC3FCA80590 /* TodayViewModel.swift */; };
 		6A44E5E995E8A4AC45B890ED /* ExercisePresetServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3069A86FDD6499591A73D469 /* ExercisePresetServiceTests.swift */; };
@@ -44,6 +45,7 @@
 		07759C9F6ACCE257531C659F /* BodyOpsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsApp.swift; sourceTree = "<group>"; };
 		122D8B90907DED0A4F6BF160 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1629F4A039635E3B58BFF04C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
 		25BCC8D85B066F0248D6D6BF /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		2F31D880250E0ADFD8D6D675 /* BodyOps.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BodyOps.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3069A86FDD6499591A73D469 /* ExercisePresetServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePresetServiceTests.swift; sourceTree = "<group>"; };
@@ -167,6 +169,7 @@
 		D01FD3D85AC61B2153A7C3AC /* Workout */ = {
 			isa = PBXGroup;
 			children = (
+				1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */,
 				B706303810A7484460133DE2 /* WorkoutRecordSheet.swift */,
 			);
 			path = Workout;
@@ -185,7 +188,7 @@
 			path = BodyOps;
 			sourceTree = "<group>";
 		};
-		"TEMP_3867E4DB-9A7E-4E6E-BBC8-F01AB7C61895" /* Utilities */ = {
+		"TEMP_DB94D7D2-50C7-4DC6-9373-584A59367D87" /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -295,6 +298,7 @@
 				138406F3A9821EE2B17CBC42 /* ChatMessage.swift in Sources */,
 				1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */,
 				3EE86521941C8DAC93E56F00 /* Exercise.swift in Sources */,
+				578338BF24C0E45141AB6EFA /* ExercisePickerView.swift in Sources */,
 				07BB70330042288BB05AAE80 /* ExercisePresetService.swift in Sources */,
 				AE4A7D1830E634D56900F9D7 /* KeychainService.swift in Sources */,
 				B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */,

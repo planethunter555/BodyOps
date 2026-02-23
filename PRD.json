@@ -92,7 +92,7 @@
       "「保存」でWorkoutSessionとWorkoutSetがSwiftDataに保存される",
       "今日タブのサマリーカードが保存後に更新される"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase2-task7",
@@ -105,7 +105,7 @@
       "カスタム種目は設定タブの一覧に表示され、削除できる",
       "プリセット種目は削除できない（削除ボタンが表示されない）"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase2-task8",
