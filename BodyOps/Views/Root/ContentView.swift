@@ -7,7 +7,7 @@ struct ContentView: View {
                 .tabItem { Label("今日", systemImage: "calendar") }
             HistoryView()
                 .tabItem { Label("履歴", systemImage: "clock.arrow.circlepath") }
-            Text("AIアドバイス")
+            AIChatView()
                 .tabItem { Label("アドバイス", systemImage: "brain") }
             SettingsView()
                 .tabItem { Label("設定", systemImage: "gearshape") }

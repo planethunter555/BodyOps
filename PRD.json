@@ -223,7 +223,7 @@
       "食事写真を添付してチャット内でPFC分析を依頼できる",
       "設定で選択中のLLMプロバイダーが使用される"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase4-task15",

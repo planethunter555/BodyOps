@@ -33,6 +33,8 @@
 		A5CE4CFB7332DC3A886AD642 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE495FE62D3AF8789468257C /* NotificationService.swift */; };
 		AE4A7D1830E634D56900F9D7 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BCC8D85B066F0248D6D6BF /* KeychainService.swift */; };
 		B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */; };
+		B33F478B48860B8D4929F8F0 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969EE67BEF13E3A27354F67C /* ChatViewModel.swift */; };
+		BC4D2FB541311721613F11A6 /* AIChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6451B0CCE57B07A233CB3129 /* AIChatView.swift */; };
 		D661C11BCE186BC04DBA15B4 /* WorkoutSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */; };
 		DD5EC52BBFB777BDBBCF6BB1 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E17AE53BB96EDBB462936E2F /* UserProfile.swift */; };
 		E1AC319B883FEC7E4383DFDD /* MealRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 478DD797EBEC237296B4035A /* MealRecord.swift */; };
@@ -64,8 +66,10 @@
 		478DD797EBEC237296B4035A /* MealRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealRecord.swift; sourceTree = "<group>"; };
 		4AF56C072AF9DB26469C43DD /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
 		61C98B3A57475E7139D915E1 /* WorkoutCopyServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCopyServiceTests.swift; sourceTree = "<group>"; };
+		6451B0CCE57B07A233CB3129 /* AIChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatView.swift; sourceTree = "<group>"; };
 		773CE6629CF7CBB5B29CFF51 /* LLMAPIServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMAPIServiceTests.swift; sourceTree = "<group>"; };
 		79A47EE7383986121FCEEB50 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		969EE67BEF13E3A27354F67C /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsTests.swift; sourceTree = "<group>"; };
 		9E80047211137045E464CF5E /* BodyOps.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BodyOps.entitlements; sourceTree = "<group>"; };
 		A3278A5B6D3F0FE5248639FE /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
@@ -92,6 +96,7 @@
 		17666F00DCF370684874D3E2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				99891DC524F76D555F19EB9E /* Chat */,
 				7C9E6C7A04CAC88EECF3F0FD /* History */,
 				9004F8168F8C3D796FEA77E3 /* Meal */,
 				8FEEAD0322208F50B523A847 /* Profile */,
@@ -142,6 +147,7 @@
 		581761A9D2B9A3CB57231078 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				969EE67BEF13E3A27354F67C /* ChatViewModel.swift */,
 				ACBBDBFC0C4DAFC3FCA80590 /* TodayViewModel.swift */,
 			);
 			path = ViewModels;
@@ -179,6 +185,14 @@
 				FC49742C68987B746BB11F0C /* MealRecordSheet.swift */,
 			);
 			path = Meal;
+			sourceTree = "<group>";
+		};
+		99891DC524F76D555F19EB9E /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				6451B0CCE57B07A233CB3129 /* AIChatView.swift */,
+			);
+			path = Chat;
 			sourceTree = "<group>";
 		};
 		B4709DD735C05E4DB7EC635B /* BodyOpsTests */ = {
@@ -344,9 +358,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BC4D2FB541311721613F11A6 /* AIChatView.swift in Sources */,
 				EA4B83BBD406ECB1204F1549 /* BodyOpsApp.swift in Sources */,
 				8C406FA08E6DC35EE9C5DACB /* CalendarExtensions.swift in Sources */,
 				138406F3A9821EE2B17CBC42 /* ChatMessage.swift in Sources */,
+				B33F478B48860B8D4929F8F0 /* ChatViewModel.swift in Sources */,
 				1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */,
 				3EE86521941C8DAC93E56F00 /* Exercise.swift in Sources */,
 				578338BF24C0E45141AB6EFA /* ExercisePickerView.swift in Sources */,
