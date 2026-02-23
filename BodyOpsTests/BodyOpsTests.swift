@@ -6,4 +6,5 @@ final class BodyOpsTests: XCTestCase {
         // テストは各サービス実装時に追加されます
         XCTAssertTrue(true)
     }
+
 }

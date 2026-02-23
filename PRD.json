@@ -203,7 +203,7 @@
       "オフライン時にネットワークエラーを返す",
       "xcodebuild test でLLMAPIServiceTestsが全て通る"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase4-task14",
