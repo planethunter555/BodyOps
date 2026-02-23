@@ -153,7 +153,7 @@
       "通知のON/OFFを切り替えられる（Task12で詳細実装）",
       "カスタム種目の一覧が表示され、削除できる"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase3-task11",
