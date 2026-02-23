@@ -1,1 +1,2 @@
 DONE phase1-task1: Xcodeプロジェクト 'BodyOps' を作成し、フォルダ構造を整備する
+DONE phase1-task2: SwiftDataモデルを実装する（UserProfile / Exercise / WorkoutSession / WorkoutSet / ChatMessage / MealRecord / NotificationSetting / LLMSetting）

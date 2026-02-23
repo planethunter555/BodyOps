@@ -30,7 +30,7 @@
       "ModelContainerがBodyOpsApp.swiftで正しく設定されている",
       "iOSシミュレーターでアプリ再起動後もデータが永続化される"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase1-task3",
