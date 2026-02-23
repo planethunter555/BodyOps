@@ -5,3 +5,4 @@ DONE phase1-task4: 複数LLMプロバイダー（Claude / OpenAI / Gemini）のA
 DONE phase2-task5: 今日タブのトップ画面を実装する（日付ナビゲーション・筋トレサマリー・食事サマリー）
 DONE phase2-task6: 筋トレ記録シートを実装する（種目選択・セット入力・前回値表示・ボリューム自動計算）
 DONE phase2-task7: 種目選択UIを実装する（筋肉グループ別フィルター・検索・カスタム種目追加）
+DONE phase2-task8: 前回セッション一括コピー機能をWorkoutCopyServiceとして実装し、UIに組み込む

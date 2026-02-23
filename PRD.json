@@ -121,7 +121,7 @@
       "コピー後、各セットの重量・回数を個別に編集できる",
       "xcodebuild test でWorkoutCopyServiceTestsが全て通る"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase2-task9",
