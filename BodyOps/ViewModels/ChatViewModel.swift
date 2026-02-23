@@ -100,9 +100,7 @@ final class ChatViewModel {
         var parts: [String] = []
 
         // Pre-fix プロンプト（ユーザー設定）
-        if !setting.modelName.isEmpty, let prefix = profile?.systemPromptPrefix, !prefix.isEmpty {
-            parts.append(prefix)
-        } else if let prefix = profile?.systemPromptPrefix, !prefix.isEmpty {
+        if let prefix = profile?.systemPromptPrefix, !prefix.isEmpty {
             parts.append(prefix)
         }
 

@@ -177,10 +177,20 @@ struct HistoryView: View {
         .padding(.vertical, 4)
     }
 
+    private func mealTypeLabel(_ raw: String) -> String {
+        switch raw {
+        case "breakfast": return "朝食"
+        case "lunch": return "昼食"
+        case "dinner": return "夕食"
+        case "snack": return "間食"
+        default: return raw
+        }
+    }
+
     private func mealDetailCard(meal: MealRecord) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Label(meal.mealType, systemImage: "fork.knife")
+                Label(mealTypeLabel(meal.mealType), systemImage: "fork.knife")
                     .font(.subheadline.bold())
                 Spacer()
                 Text("\(Int(meal.calories)) kcal")

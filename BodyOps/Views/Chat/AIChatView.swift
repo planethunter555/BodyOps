@@ -105,29 +105,7 @@ struct AIChatView: View {
     }
 
     private var typingIndicator: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            Circle()
-                .fill(Color(.systemGray4))
-                .frame(width: 28, height: 28)
-                .overlay {
-                    Image(systemName: "brain")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
-                }
-            HStack(spacing: 4) {
-                ForEach(0..<3) { _ in
-                    Circle()
-                        .fill(Color(.systemGray3))
-                        .frame(width: 8, height: 8)
-                        .opacity(0.5)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            Spacer()
-        }
+        TypingIndicatorView()
     }
 
     // MARK: - Input Bar
@@ -216,6 +194,46 @@ struct AIChatView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Typing Indicator
+
+struct TypingIndicatorView: View {
+    @State private var animating = false
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            Circle()
+                .fill(Color(.systemGray4))
+                .frame(width: 28, height: 28)
+                .overlay {
+                    Image(systemName: "brain")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                }
+            HStack(spacing: 4) {
+                ForEach(0..<3) { index in
+                    Circle()
+                        .fill(Color(.systemGray3))
+                        .frame(width: 8, height: 8)
+                        .scaleEffect(animating ? 1.0 : 0.5)
+                        .opacity(animating ? 1.0 : 0.3)
+                        .animation(
+                            .easeInOut(duration: 0.5)
+                                .repeatForever(autoreverses: true)
+                                .delay(Double(index) * 0.15),
+                            value: animating
+                        )
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            Spacer()
+        }
+        .onAppear { animating = true }
     }
 }
 
