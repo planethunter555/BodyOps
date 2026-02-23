@@ -2,9 +2,9 @@ import Foundation
 import SwiftData
 
 enum LLMProvider: String, CaseIterable, Codable {
-    case claude = "claude"
-    case openai = "openai"
-    case gemini = "gemini"
+    case claude
+    case openai
+    case gemini
 
     var displayName: String {
         switch self {

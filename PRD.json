@@ -12,7 +12,7 @@
       "Xcodeでビルドエラーなくビルドが通る",
       "git init が完了しており .gitignore が設定されている"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase1-task2",
