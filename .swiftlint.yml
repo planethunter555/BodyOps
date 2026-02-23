@@ -1,0 +1,26 @@
+included:
+  - BodyOps
+
+excluded:
+  - BodyOpsTests
+  - .build
+
+disabled_rules:
+  - trailing_whitespace
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - first_where
+
+line_length:
+  warning: 130
+  error: 160
+
+type_body_length:
+  warning: 300
+  error: 400
+
+file_length:
+  warning: 500
+  error: 700

@@ -1,0 +1,263 @@
+[
+  {
+    "id": "phase1-task1",
+    "category": "setup",
+    "description": "Xcodeプロジェクト 'BodyOps' を作成し、フォルダ構造を整備する",
+    "steps": [
+      "BodyOps という名前のSwiftUI + SwiftDataプロジェクトが存在する",
+      "Models / Services / ViewModels / Views / Resources / Utilities フォルダが作成されている",
+      "Views の中に Root / Workout / History / Chat / Meal / Profile / Components サブフォルダが存在する",
+      "BodyOpsTests ターゲットが存在し、tests/ 以下のテストコードが配置されている",
+      "iOS 17以上をターゲットとして設定されている",
+      "Xcodeでビルドエラーなくビルドが通る",
+      "git init が完了しており .gitignore が設定されている"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase1-task2",
+    "category": "data",
+    "description": "SwiftDataモデルを実装する（UserProfile / Exercise / WorkoutSession / WorkoutSet / ChatMessage / MealRecord / NotificationSetting / LLMSetting）",
+    "steps": [
+      "UserProfile: height, weight, bodyFatPercentage, targetMuscleMass, targetBodyFat, weeklyWorkoutDays, goals, constraints, systemPromptPrefix フィールドを持つ",
+      "Exercise: name, category（胸/背中/脚/肩/腕/腹）, isPreset, memo フィールドを持つ",
+      "WorkoutSession: date, memo, totalVolume フィールドを持ち、WorkoutSetと1:Nリレーション（cascade delete）を持つ",
+      "WorkoutSet: setNumber, weight, reps, volume（=weight×reps）フィールドを持ち、ExerciseとN:1リレーションを持つ",
+      "ChatMessage: role（user/assistant）, content, imageData, chatType, createdAt, sessionTag（会話セッション識別子）フィールドを持つ",
+      "MealRecord: description, imageData, calories, protein, fat, carbs, mealType, aiAnalysis, recordedAt フィールドを持つ",
+      "NotificationSetting: isEnabled, weekdays（配列）, hour, minute フィールドを持つ",
+      "LLMSetting: provider（claude/openai/gemini）, modelName, apiKey（Keychain参照用キー名）フィールドを持つ",
+      "ModelContainerがBodyOpsApp.swiftで正しく設定されている",
+      "iOSシミュレーターでアプリ再起動後もデータが永続化される"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase1-task3",
+    "category": "data",
+    "description": "プリセット種目60種をExercisePresets.jsonで定義し、初回起動時にSwiftDataへ投入するExercisePresetServiceを実装する",
+    "test_file": "BodyOps/BodyOpsTests/ExercisePresetServiceTests.swift",
+    "test_scenario": "tests/ExercisePresetServiceTests.md",
+    "steps": [
+      "胸（10種）・背中（10種）・脚（10種）・肩（8種）・腕（12種）・腹（10種）の計60種が登録されている",
+      "ExercisePresetService.swift が初回起動時のみデータ投入を実行する（冪等性保証）",
+      "isPreset = true として登録されており、ユーザーが削除できない",
+      "起動時に種目は何も選択されておらず、ユーザーが都度選択する形になっている",
+      "xcodebuild test でExercisePresetServiceTestsが全て通る"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase1-task4",
+    "category": "service",
+    "description": "複数LLMプロバイダー（Claude / OpenAI / Gemini）のAPIキーを安全に管理するKeychainServiceを実装する",
+    "test_file": "BodyOps/BodyOpsTests/KeychainServiceTests.swift",
+    "test_scenario": "tests/KeychainServiceTests.md",
+    "steps": [
+      "KeychainService.shared.save(apiKey:forProvider:) でプロバイダー別にAPIキーを保存できる",
+      "KeychainService.shared.load(forProvider:) でプロバイダー別にAPIキーを取得できる",
+      "KeychainService.shared.delete(forProvider:) でプロバイダー別にAPIキーを削除できる",
+      "Claude / OpenAI / Gemini それぞれのキーが独立して管理される",
+      "delete()後はload()がnilを返す",
+      "xcodebuild test でKeychainServiceTestsが全て通る"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase2-task5",
+    "category": "ui",
+    "description": "今日タブのトップ画面を実装する（日付ナビゲーション・筋トレサマリー・食事サマリー）",
+    "steps": [
+      "現在の日付が画面上部に表示される",
+      "前日・翌日に移動できる（スワイプまたはボタン）",
+      "当日の筋トレサマリーカード（種目数・総ボリューム）が表示される",
+      "当日の食事サマリーカード（摂取カロリー・PFC進捗バー）が表示される",
+      "「筋トレを記録する」ボタンをタップするとシートが表示される",
+      "「食事を記録する」ボタンをタップするとシートが表示される",
+      "記録がない日は空状態のメッセージが表示される"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase2-task6",
+    "category": "ui",
+    "description": "筋トレ記録シートを実装する（種目選択・セット入力・前回値表示・ボリューム自動計算）",
+    "steps": [
+      "「種目を追加」ボタンから種目選択画面（Task7）を開ける",
+      "選択した種目の前回重量・回数がプレースホルダーとしてグレー表示される",
+      "重量（0.5kg単位）と回数を入力するとボリューム（重量×回数）がリアルタイム計算・表示される",
+      "「+ セット追加」で直前のセットの重量・回数がコピーされた新しいセットが追加される",
+      "種目ごとに全セットのボリューム合計が表示される",
+      "セッションメモを入力できる",
+      "「保存」でWorkoutSessionとWorkoutSetがSwiftDataに保存される",
+      "今日タブのサマリーカードが保存後に更新される"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase2-task7",
+    "category": "ui",
+    "description": "種目選択UIを実装する（筋肉グループ別フィルター・検索・カスタム種目追加）",
+    "steps": [
+      "胸・背中・脚・肩・腕・腹のグループタブでフィルタリングできる",
+      "テキスト検索で種目名を絞り込める",
+      "「カスタム追加」で名前とグループを指定して新しい種目を登録できる",
+      "カスタム種目は設定タブの一覧に表示され、削除できる",
+      "プリセット種目は削除できない（削除ボタンが表示されない）"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase2-task8",
+    "category": "service",
+    "description": "前回セッション一括コピー機能をWorkoutCopyServiceとして実装し、UIに組み込む",
+    "test_file": "BodyOps/BodyOpsTests/WorkoutCopyServiceTests.swift",
+    "test_scenario": "tests/WorkoutCopyServiceTests.md",
+    "steps": [
+      "筋トレ記録シートに「前回と同じメニューをコピー」ボタンが表示される",
+      "タップすると前回セッションの種目一覧がプレビューシートで表示される",
+      "「コピーして開始」で前回の全種目・セット数・重量・回数が現在のセッションに追加される",
+      "前回セッションが存在しない場合はボタンがグレーアウトまたは非表示になる",
+      "コピー後、各セットの重量・回数を個別に編集できる",
+      "xcodebuild test でWorkoutCopyServiceTestsが全て通る"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase2-task9",
+    "category": "ui",
+    "description": "履歴タブを実装する（カレンダービュー・日別詳細・筋肉グループ別直近日）",
+    "steps": [
+      "月次カレンダーが表示され、筋トレ記録がある日にマーカーが表示される",
+      "日付をタップするとその日の筋トレ詳細・食事記録が表示される",
+      "筋肉グループ別に最後にトレーニングした日付の一覧が表示される",
+      "「グラフで見る」ボタンをタップするとグラフ画面に遷移する（Task11で実装）",
+      "前月・翌月への移動ができる"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase2-task10",
+    "category": "ui",
+    "description": "設定タブを実装する（プロファイル・目標・LLM選択・Pre-fixプロンプト・通知・カスタム種目・APIキー管理）",
+    "steps": [
+      "身長・体重・体脂肪率を入力・保存できる",
+      "目標筋肉量・目標体脂肪率・週のトレーニング可能日数を設定できる",
+      "制約・要望を自由テキストで入力できる",
+      "使用するLLMプロバイダー（Claude / OpenAI / Gemini）を選択できる",
+      "選択したプロバイダーのモデル名を選択または入力できる",
+      "選択したプロバイダーのAPIキーを入力・保存できる（Keychain経由）",
+      "「接続テスト」ボタンでAPIキーの有効性を確認できる",
+      "AIエージェントへのPre-fixシステムプロンプトを自由テキストで入力・保存できる",
+      "Pre-fixプロンプトはAIアドバイスの全チャットに先頭付与される",
+      "通知のON/OFFを切り替えられる（Task12で詳細実装）",
+      "カスタム種目の一覧が表示され、削除できる"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase3-task11",
+    "category": "ui",
+    "description": "グラフ画面を実装する（種目別重量推移・総ボリューム推移・筋肉グループ頻度）",
+    "steps": [
+      "選択した種目の最高重量の推移が折れ線グラフで表示される",
+      "週単位の総ボリューム推移が棒グラフで表示される",
+      "筋肉グループ別の頻度（過去4週間）がヒートマップまたは棒グラフで表示される",
+      "グラフはSwiftChartsを使用して実装されている",
+      "期間フィルター（1ヶ月・3ヶ月・6ヶ月・全期間）を切り替えられる"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase3-task12",
+    "category": "service",
+    "description": "ローカル通知（トレーニングリマインダー）をNotificationServiceとして実装する",
+    "test_file": "BodyOps/BodyOpsTests/NotificationServiceTests.swift",
+    "test_scenario": "tests/NotificationServiceTests.md",
+    "steps": [
+      "初回設定時にユーザーへ通知許可を求める",
+      "曜日（月〜日の複数選択）と時刻を指定してリマインダーを設定できる",
+      "設定した曜日・時刻にローカル通知が届く",
+      "通知をOFFにすると登録済みの全通知がキャンセルされる",
+      "設定変更後は古い通知がキャンセルされ新しい設定で再登録される",
+      "xcodebuild test でNotificationServiceTestsが全て通る"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase4-task13",
+    "category": "service",
+    "description": "複数LLMプロバイダーに対応したLLMAPIServiceを実装する（Claude / OpenAI / Gemini）",
+    "test_file": "BodyOps/BodyOpsTests/LLMAPIServiceTests.swift",
+    "test_scenario": "tests/LLMAPIServiceTests.md",
+    "steps": [
+      "LLMAPIService が設定で選択されたプロバイダーに応じてAPIリクエスト先を切り替える",
+      "Claude (claude-sonnet-4-6 等) へのSSEストリーミングリクエストが動作する",
+      "OpenAI (gpt-4o 等) へのSSEストリーミングリクエストが動作する",
+      "Gemini (gemini-2.0-flash 等) へのSSEストリーミングリクエストが動作する",
+      "テキストのみのメッセージと画像付きメッセージ（Base64）を全プロバイダーで送受信できる",
+      "AsyncThrowingStreamでUIにチャンクを逐次配信できる",
+      "401エラー時に「APIキーを確認してください」エラーを返す",
+      "429エラー時に「しばらく待ってから再試行してください」エラーを返す",
+      "5xxエラー時に「接続できません」エラーを返す",
+      "オフライン時にネットワークエラーを返す",
+      "xcodebuild test でLLMAPIServiceTestsが全て通る"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase4-task14",
+    "category": "ai",
+    "description": "AIアドバイスタブのチャットUIとコンテキスト構築ロジックを実装する",
+    "steps": [
+      "ChatGPT / Gemini風のチャットUI（ユーザーメッセージは右寄せ、AIは左寄せ・アバター付き）で表示される",
+      "ストリーミングレスポンスが逐次表示される",
+      "設定のPre-fixプロンプトがシステムプロンプトの先頭に付与される",
+      "システムプロンプトにUserProfileの情報（身長・体重・体脂肪・目標・制約）が含まれる",
+      "直近3セッションの筋トレ記録（種目・重量・回数・日付・メモ）がコンテキストに含まれる",
+      "当日・前日の食事記録（PFC・カロリー）がコンテキストに含まれる",
+      "会話履歴はChatMessageとしてSwiftDataに保存され、過去1週間分が保持される",
+      "「新しい会話」ボタンで表示上の会話はリセットされるが、SwiftDataには履歴が残る",
+      "AI応答のコンテキスト構築時に過去1週間の会話履歴も参照される",
+      "APIキー未設定時に設定タブへの誘導メッセージが表示される",
+      "食事写真を添付してチャット内でPFC分析を依頼できる",
+      "設定で選択中のLLMプロバイダーが使用される"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase4-task15",
+    "category": "ai",
+    "description": "食事記録シートを実装する（テキスト/写真入力→AIがPFC推定→SwiftDataに保存）",
+    "steps": [
+      "テキストで食事内容を入力してAIにPFC推定を依頼できる",
+      "カメラまたはフォトライブラリから食事写真を選択してAIにPFC推定を依頼できる",
+      "AIの推定結果（カロリー・P・F・C）が確認画面に表示される",
+      "ユーザーが推定値を手動修正できる",
+      "食事タイプ（朝・昼・夜・間食）を選択できる",
+      "「保存」でMealRecordがSwiftDataに保存される",
+      "今日タブの食事サマリーカードが更新される",
+      "PFC推定のJSONパースに失敗した場合は手動入力モードに切り替わる",
+      "設定で選択中のLLMプロバイダーが使用される"
+    ],
+    "passes": false
+  },
+  {
+    "id": "phase4-task16",
+    "category": "ui",
+    "description": "統合テスト・UXポリッシュを行う",
+    "steps": [
+      "主要フロー（記録→履歴→AIアドバイス）を通じてクラッシュが発生しない",
+      "Claude / OpenAI / Gemini それぞれのプロバイダーでチャットが正常動作する",
+      "Pre-fixプロンプトを設定するとAI応答のトーン・スタイルが変わる",
+      "オフライン時に記録機能は正常動作し、AI機能は適切なエラーを表示する",
+      "ダークモードで全画面が正しく表示される",
+      "ローカル通知が設定した時刻に届く",
+      "前回値のプレースホルダー表示が全種目で正しく動作する",
+      "前回セッションコピー機能が種目・重量・回数を正確に再現する",
+      "「新しい会話」後も過去1週間の履歴がコンテキストに含まれてAIが参照できる",
+      "食事写真からPFC値が推定され保存できる"
+    ],
+    "passes": false
+  }
+]

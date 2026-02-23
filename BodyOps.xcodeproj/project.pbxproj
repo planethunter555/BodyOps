@@ -1,0 +1,475 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A48AAD7F6825C96FDE772FD /* NotificationSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9DED9FA2F5DDA0EA12822 /* NotificationSetting.swift */; };
+		138406F3A9821EE2B17CBC42 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17175B8BE749EB90DD6367B /* ChatMessage.swift */; };
+		1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122D8B90907DED0A4F6BF160 /* ContentView.swift */; };
+		3EE86521941C8DAC93E56F00 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF56C072AF9DB26469C43DD /* Exercise.swift */; };
+		5954ECE988918992693AA9A9 /* BodyOpsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */; };
+		6B0FDAE5C1DDF0A316FE810C /* WorkoutSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465A3FD33F9A3369CECACB2A /* WorkoutSet.swift */; };
+		B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */; };
+		D661C11BCE186BC04DBA15B4 /* WorkoutSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */; };
+		DD5EC52BBFB777BDBBCF6BB1 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E17AE53BB96EDBB462936E2F /* UserProfile.swift */; };
+		E1AC319B883FEC7E4383DFDD /* MealRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 478DD797EBEC237296B4035A /* MealRecord.swift */; };
+		EA4B83BBD406ECB1204F1549 /* BodyOpsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07759C9F6ACCE257531C659F /* BodyOpsApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B4D0929C377897336D82C5BD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 347A03A93A608345C7A4E536 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1979765E23FE6B96F54DFF93;
+			remoteInfo = BodyOps;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		07759C9F6ACCE257531C659F /* BodyOpsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsApp.swift; sourceTree = "<group>"; };
+		122D8B90907DED0A4F6BF160 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		1629F4A039635E3B58BFF04C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2F31D880250E0ADFD8D6D675 /* BodyOps.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BodyOps.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		465A3FD33F9A3369CECACB2A /* WorkoutSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSet.swift; sourceTree = "<group>"; };
+		478DD797EBEC237296B4035A /* MealRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealRecord.swift; sourceTree = "<group>"; };
+		4AF56C072AF9DB26469C43DD /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
+		9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsTests.swift; sourceTree = "<group>"; };
+		9E80047211137045E464CF5E /* BodyOps.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BodyOps.entitlements; sourceTree = "<group>"; };
+		A981C8BADB1F5D7CBFD2E071 /* BodyOpsTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BodyOpsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSetting.swift; sourceTree = "<group>"; };
+		DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSession.swift; sourceTree = "<group>"; };
+		E17AE53BB96EDBB462936E2F /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		ECB9DED9FA2F5DDA0EA12822 /* NotificationSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSetting.swift; sourceTree = "<group>"; };
+		F17175B8BE749EB90DD6367B /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		17666F00DCF370684874D3E2 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				507AAD7AD29B95774A8847F2 /* Root */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		428578A21EF836AD60C0BEBC = {
+			isa = PBXGroup;
+			children = (
+				FA956562E3C654410F0148EA /* BodyOps */,
+				B4709DD735C05E4DB7EC635B /* BodyOpsTests */,
+				87E0155F6C3438B926B52F23 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		507AAD7AD29B95774A8847F2 /* Root */ = {
+			isa = PBXGroup;
+			children = (
+				122D8B90907DED0A4F6BF160 /* ContentView.swift */,
+			);
+			path = Root;
+			sourceTree = "<group>";
+		};
+		87E0155F6C3438B926B52F23 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2F31D880250E0ADFD8D6D675 /* BodyOps.app */,
+				A981C8BADB1F5D7CBFD2E071 /* BodyOpsTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B4709DD735C05E4DB7EC635B /* BodyOpsTests */ = {
+			isa = PBXGroup;
+			children = (
+				9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */,
+			);
+			path = BodyOpsTests;
+			sourceTree = "<group>";
+		};
+		C60906142F4763C85072C6F4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9E80047211137045E464CF5E /* BodyOps.entitlements */,
+				1629F4A039635E3B58BFF04C /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		CD462B6B0280A0041C890B24 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F17175B8BE749EB90DD6367B /* ChatMessage.swift */,
+				4AF56C072AF9DB26469C43DD /* Exercise.swift */,
+				D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */,
+				478DD797EBEC237296B4035A /* MealRecord.swift */,
+				ECB9DED9FA2F5DDA0EA12822 /* NotificationSetting.swift */,
+				E17AE53BB96EDBB462936E2F /* UserProfile.swift */,
+				DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */,
+				465A3FD33F9A3369CECACB2A /* WorkoutSet.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FA956562E3C654410F0148EA /* BodyOps */ = {
+			isa = PBXGroup;
+			children = (
+				07759C9F6ACCE257531C659F /* BodyOpsApp.swift */,
+				CD462B6B0280A0041C890B24 /* Models */,
+				C60906142F4763C85072C6F4 /* Resources */,
+				17666F00DCF370684874D3E2 /* Views */,
+			);
+			path = BodyOps;
+			sourceTree = "<group>";
+		};
+		"TEMP_75CB2932-9F02-4FA0-B975-71FE400037B8" /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1979765E23FE6B96F54DFF93 /* BodyOps */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EA1FCFF9BBC53C4E0D07DBF2 /* Build configuration list for PBXNativeTarget "BodyOps" */;
+			buildPhases = (
+				B5DDE0DBA7976B1FC5472B9D /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BodyOps;
+			packageProductDependencies = (
+			);
+			productName = BodyOps;
+			productReference = 2F31D880250E0ADFD8D6D675 /* BodyOps.app */;
+			productType = "com.apple.product-type.application";
+		};
+		71E50E4AAF8715E6567A3BF0 /* BodyOpsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CACA5D09563777C62FAD7CAC /* Build configuration list for PBXNativeTarget "BodyOpsTests" */;
+			buildPhases = (
+				B2133C28B178ED9FDB3735BF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5334D579598BF681512CEB0C /* PBXTargetDependency */,
+			);
+			name = BodyOpsTests;
+			packageProductDependencies = (
+			);
+			productName = BodyOpsTests;
+			productReference = A981C8BADB1F5D7CBFD2E071 /* BodyOpsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		347A03A93A608345C7A4E536 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					1979765E23FE6B96F54DFF93 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 4137A3214974F9DC491FB841 /* Build configuration list for PBXProject "BodyOps" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 428578A21EF836AD60C0BEBC;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1979765E23FE6B96F54DFF93 /* BodyOps */,
+				71E50E4AAF8715E6567A3BF0 /* BodyOpsTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B2133C28B178ED9FDB3735BF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5954ECE988918992693AA9A9 /* BodyOpsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B5DDE0DBA7976B1FC5472B9D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA4B83BBD406ECB1204F1549 /* BodyOpsApp.swift in Sources */,
+				138406F3A9821EE2B17CBC42 /* ChatMessage.swift in Sources */,
+				1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */,
+				3EE86521941C8DAC93E56F00 /* Exercise.swift in Sources */,
+				B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */,
+				E1AC319B883FEC7E4383DFDD /* MealRecord.swift in Sources */,
+				0A48AAD7F6825C96FDE772FD /* NotificationSetting.swift in Sources */,
+				DD5EC52BBFB777BDBBCF6BB1 /* UserProfile.swift in Sources */,
+				D661C11BCE186BC04DBA15B4 /* WorkoutSession.swift in Sources */,
+				6B0FDAE5C1DDF0A316FE810C /* WorkoutSet.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		5334D579598BF681512CEB0C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1979765E23FE6B96F54DFF93 /* BodyOps */;
+			targetProxy = B4D0929C377897336D82C5BD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		191A9A5AEAD9FA21FB334F01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bodyops.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BodyOps.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BodyOps";
+			};
+			name = Debug;
+		};
+		2A76D7346D529DAEDA960672 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		5DD9C6E72F8DC150840B9598 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BodyOps/Resources/BodyOps.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = BodyOps/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bodyops.app;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		63B2E4FFD5FC8C382568E94D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bodyops.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BodyOps.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BodyOps";
+			};
+			name = Release;
+		};
+		D75B35C65F0B5157E1105855 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BodyOps/Resources/BodyOps.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = BodyOps/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bodyops.app;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		DEE41084F55AB490CF1723C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4137A3214974F9DC491FB841 /* Build configuration list for PBXProject "BodyOps" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2A76D7346D529DAEDA960672 /* Debug */,
+				DEE41084F55AB490CF1723C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CACA5D09563777C62FAD7CAC /* Build configuration list for PBXNativeTarget "BodyOpsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				191A9A5AEAD9FA21FB334F01 /* Debug */,
+				63B2E4FFD5FC8C382568E94D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EA1FCFF9BBC53C4E0D07DBF2 /* Build configuration list for PBXNativeTarget "BodyOps" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DD9C6E72F8DC150840B9598 /* Debug */,
+				D75B35C65F0B5157E1105855 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 347A03A93A608345C7A4E536 /* Project object */;
+}
