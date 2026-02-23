@@ -240,7 +240,7 @@
       "PFC推定のJSONパースに失敗した場合は手動入力モードに切り替わる",
       "設定で選択中のLLMプロバイダーが使用される"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase4-task16",
