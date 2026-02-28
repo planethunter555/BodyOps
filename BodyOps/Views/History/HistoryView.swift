@@ -9,6 +9,7 @@ struct HistoryView: View {
     @State private var currentMonth: Date = Calendar.current.startOfMonth(for: Date())
     @State private var selectedDate: Date?
     @State private var showGraphView = false
+    @State private var showCSVImport = false
 
     let categories = ["胸", "背中", "脚", "肩", "腕", "腹"]
 
@@ -34,9 +35,19 @@ struct HistoryView: View {
                         Label("グラフで見る", systemImage: "chart.xyaxis.line")
                     }
                 }
+                ToolbarItem(placement: .secondaryAction) {
+                    Button {
+                        showCSVImport = true
+                    } label: {
+                        Label("CSVインポート", systemImage: "square.and.arrow.down")
+                    }
+                }
             }
             .navigationDestination(isPresented: $showGraphView) {
                 GraphView()
+            }
+            .sheet(isPresented: $showCSVImport) {
+                CSVImportSheet()
             }
         }
     }
