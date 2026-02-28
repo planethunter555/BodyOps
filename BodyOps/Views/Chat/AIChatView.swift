@@ -100,6 +100,10 @@ struct AIChatView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
+            Text(viewModel.currentModelDescription)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .padding(.top, 4)
         }
         .padding(.bottom, 16)
     }

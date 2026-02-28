@@ -45,12 +45,19 @@ struct SettingsView: View {
                 notificationSection
                 customExerciseSection
             }
+            .scrollDismissesKeyboard(.immediately)
             .navigationTitle("設定")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { loadCurrentValues() }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") { saveSettings() }
+                    Button("保存") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil, from: nil, for: nil
+                        )
+                        saveSettings()
+                    }
                 }
             }
             .alert("保存しました", isPresented: $showSaveAlert) {
@@ -134,11 +141,10 @@ struct SettingsView: View {
                 apiKeyInput = KeychainService.shared.load(forProvider: newProvider) ?? ""
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("モデル名")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                TextField(selectedProvider.defaultModel, text: $modelName)
+            Picker("モデル", selection: $modelName) {
+                ForEach(selectedProvider.models, id: \.self) { model in
+                    Text(model).tag(model)
+                }
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -152,7 +158,7 @@ struct SettingsView: View {
 
             Button {
                 saveApiKey()
-                testConnection()
+                Task { await testConnection() }
             } label: {
                 HStack {
                     Text("接続テスト")
@@ -266,7 +272,8 @@ struct SettingsView: View {
         }
         if let setting = currentLLMSetting {
             selectedProvider = setting.provider
-            modelName = setting.modelName
+            let validModels = setting.provider.models
+            modelName = validModels.contains(setting.modelName) ? setting.modelName : setting.provider.defaultModel
         }
         apiKeyInput = KeychainService.shared.load(forProvider: selectedProvider) ?? ""
         if let notifSetting = notificationSettings.first {
@@ -285,15 +292,38 @@ struct SettingsView: View {
         try? KeychainService.shared.save(apiKey: apiKeyInput, forProvider: selectedProvider)
     }
 
-    private func testConnection() {
+    private func testConnection() async {
+        guard !apiKeyInput.isEmpty else {
+            connectionTestResult = "❌ APIキーが入力されていません"
+            return
+        }
         isTestingConnection = true
         connectionTestResult = ""
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            isTestingConnection = false
-            connectionTestResult = apiKeyInput.isEmpty
-                ? "APIキーが入力されていません"
-                : "接続テストはアプリ内チャットで確認できます"
+        let effectiveModel = modelName.isEmpty ? selectedProvider.defaultModel : modelName
+        let message = LLMMessage(role: "user", content: "Reply with OK only.")
+        do {
+            var response = ""
+            for try await chunk in LLMAPIService().sendMessage(
+                messages: [message],
+                system: "",
+                provider: selectedProvider,
+                apiKey: apiKeyInput,
+                modelName: effectiveModel
+            ) {
+                response += chunk
+            }
+            connectionTestResult = response.isEmpty ? "⚠️ 応答が空です" : "✓ 接続成功"
+        } catch let error as LLMError {
+            switch error {
+            case .unauthorized: connectionTestResult = "❌ APIキーが無効です"
+            case .rateLimited: connectionTestResult = "⚠️ レート制限中。しばらく待ってください"
+            case .serverError: connectionTestResult = "❌ サーバーエラー"
+            case .networkError: connectionTestResult = "❌ ネットワークエラー"
+            }
+        } catch {
+            connectionTestResult = "❌ 接続失敗"
         }
+        isTestingConnection = false
     }
 
     private func saveSettings() {

@@ -21,6 +21,14 @@ enum LLMProvider: String, CaseIterable, Codable {
         case .gemini: return "gemini-2.0-flash"
         }
     }
+
+    var models: [String] {
+        switch self {
+        case .claude: return ["claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5-20251001"]
+        case .openai: return ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]
+        case .gemini: return ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"]
+        }
+    }
 }
 
 @Model

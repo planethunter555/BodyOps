@@ -260,6 +260,12 @@ final class ChatViewModel {
         let setting = fetchLLMSetting()
         return KeychainService.shared.load(forProvider: setting.provider) != nil
     }
+
+    var currentModelDescription: String {
+        let setting = fetchLLMSetting()
+        let model = setting.modelName.isEmpty ? setting.provider.defaultModel : setting.modelName
+        return "\(setting.provider.displayName)  |  \(model)"
+    }
 }
 
 // MARK: - Chat Bubble Model
