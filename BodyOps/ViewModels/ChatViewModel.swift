@@ -165,10 +165,10 @@ final class ChatViewModel {
     private func buildAPIMessages(currentText: String, imageData: Data?, context: ModelContext) -> [LLMMessage] {
         var result: [LLMMessage] = []
 
-        // 過去1週間の会話履歴（現在のセッション問わず）
+        // 過去1週間の会話履歴（画像は除外してテキストのみ送信 - メモリ節約）
         let history = fetchWeeklyHistory(context: context)
         for msg in history {
-            result.append(LLMMessage(role: msg.role, content: msg.content, imageData: msg.imageData))
+            result.append(LLMMessage(role: msg.role, content: msg.content, imageData: nil))
         }
 
         // 今回のユーザーメッセージ
@@ -213,9 +213,9 @@ final class ChatViewModel {
             predicate: #Predicate { $0.createdAt >= oneWeekAgo },
             sortBy: [SortDescriptor(\.createdAt)]
         )
-        // 最新の会話のみ（コンテキスト肥大化防止で最大30件）
+        // 最新の会話のみ（コンテキスト肥大化防止で最大20件）
         let all = (try? context.fetch(descriptor)) ?? []
-        return Array(all.suffix(30))
+        return Array(all.suffix(20))
     }
 
     // MARK: - Persistence

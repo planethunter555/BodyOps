@@ -164,7 +164,7 @@ struct MealRecordSheet: View {
         guard let item else { return }
         Task {
             if let data = try? await item.loadTransferable(type: Data.self) {
-                let compressed = UIImage(data: data)?.jpegData(compressionQuality: 0.7) ?? data
+                let compressed = ImageCompressor.compress(data)
                 await MainActor.run {
                     viewModel.imageData = compressed
                 }

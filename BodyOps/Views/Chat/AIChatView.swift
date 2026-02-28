@@ -190,9 +190,7 @@ struct AIChatView: View {
         guard let item else { return }
         Task {
             if let data = try? await item.loadTransferable(type: Data.self) {
-                // 画像を圧縮（API送信サイズ削減）
-                let compressed = UIImage(data: data)?
-                    .jpegData(compressionQuality: 0.7) ?? data
+                let compressed = ImageCompressor.compress(data)
                 await MainActor.run {
                     viewModel.pendingImageData = compressed
                 }

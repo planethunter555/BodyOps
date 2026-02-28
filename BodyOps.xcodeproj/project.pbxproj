@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0787761CE9DD46121F7DF8A3 /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD935686F580D50455530119 /* NotificationServiceTests.swift */; };
 		07BB70330042288BB05AAE80 /* ExercisePresetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */; };
+		08CEBD7A5613D06931361D08 /* ImageCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05114FB97BFE953DB1E69375 /* ImageCompressor.swift */; };
 		0A48AAD7F6825C96FDE772FD /* NotificationSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9DED9FA2F5DDA0EA12822 /* NotificationSetting.swift */; };
 		0D489E4CAD3C42D53222D2C3 /* LLMAPIServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 773CE6629CF7CBB5B29CFF51 /* LLMAPIServiceTests.swift */; };
 		138406F3A9821EE2B17CBC42 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17175B8BE749EB90DD6367B /* ChatMessage.swift */; };
@@ -54,6 +55,7 @@
 
 /* Begin PBXFileReference section */
 		0441871ABDC563C063788A35 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
+		05114FB97BFE953DB1E69375 /* ImageCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCompressor.swift; sourceTree = "<group>"; };
 		07759C9F6ACCE257531C659F /* BodyOpsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsApp.swift; sourceTree = "<group>"; };
 		122D8B90907DED0A4F6BF160 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1629F4A039635E3B58BFF04C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -110,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				EAB9C8CFCFC5FA086ED59D1A /* CalendarExtensions.swift */,
+				05114FB97BFE953DB1E69375 /* ImageCompressor.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -369,6 +372,7 @@
 				07BB70330042288BB05AAE80 /* ExercisePresetService.swift in Sources */,
 				FB71C647D30D9FA28F315CCF /* GraphView.swift in Sources */,
 				3C7A2ED4318D546943B09AA1 /* HistoryView.swift in Sources */,
+				08CEBD7A5613D06931361D08 /* ImageCompressor.swift in Sources */,
 				AE4A7D1830E634D56900F9D7 /* KeychainService.swift in Sources */,
 				63211D5E371BE96A68E9E670 /* LLMAPIService.swift in Sources */,
 				B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */,
