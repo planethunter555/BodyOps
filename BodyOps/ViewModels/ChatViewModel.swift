@@ -95,71 +95,13 @@ final class ChatViewModel {
     // MARK: - Context Building
 
     private func buildSystemPrompt(context: ModelContext) -> String {
-        let profile = fetchProfile(context: context)
-        let setting = fetchLLMSetting()
-        var parts: [String] = []
+        SystemPromptBuilder(context: context).build()
+    }
 
-        // Pre-fix プロンプト（ユーザー設定）
-        if let prefix = profile?.systemPromptPrefix, !prefix.isEmpty {
-            parts.append(prefix)
-        }
-
-        // ベースシステムプロンプト
-        parts.append("あなたは「Body Ops」専属のパーソナルトレーナー兼栄養士です。ユーザーの記録に基づき、科学的根拠のある具体的なアドバイスを日本語で提供してください。")
-
-        // プロファイル情報
-        if let prof = profile {
-            parts.append("""
-            ## ユーザープロファイル
-            - 身長: \(prof.height)cm / 体重: \(prof.weight)kg / 体脂肪率: \(prof.bodyFatPercentage)%
-            - 目標筋肉量: \(prof.targetMuscleMass)kg / 目標体脂肪率: \(prof.targetBodyFat)%
-            - 週のトレーニング可能日数: \(prof.weeklyWorkoutDays)日
-            """)
-
-            if !prof.goals.isEmpty {
-                parts.append("## 目標\n\(prof.goals)")
-            }
-            if !prof.constraints.isEmpty {
-                parts.append("## 制約・要望\n\(prof.constraints)")
-            }
-        }
-
-        // 直近3セッションの筋トレ記録
-        let recentSessions = fetchRecentSessions(context: context, limit: 3)
-        if !recentSessions.isEmpty {
-            var workoutLines = ["## 直近のトレーニング記録"]
-            for session in recentSessions {
-                let dateStr = formatDate(session.date)
-                let grouped = Dictionary(grouping: session.sets) { $0.exercise?.name ?? "不明" }
-                let exerciseLines = grouped.map { name, sets in
-                    let setDesc = sets.sorted { $0.setNumber < $1.setNumber }
-                        .map { "\($0.weight)kg×\($0.reps)回" }
-                        .joined(separator: ", ")
-                    return "  - \(name): \(setDesc)"
-                }.joined(separator: "\n")
-                workoutLines.append("[\(dateStr)]\n\(exerciseLines)")
-                if !session.memo.isEmpty {
-                    workoutLines.append("  メモ: \(session.memo)")
-                }
-            }
-            parts.append(workoutLines.joined(separator: "\n"))
-        }
-
-        // 当日・前日の食事
-        let recentMeals = fetchRecentMeals(context: context)
-        if !recentMeals.isEmpty {
-            var mealLines = ["## 直近の食事記録"]
-            for meal in recentMeals {
-                let mealEntry = "- \(meal.mealType)（\(formatDate(meal.recordedAt))）: " +
-                    "\(Int(meal.calories))kcal, P\(Int(meal.protein))g F\(Int(meal.fat))g C\(Int(meal.carbs))g"
-                mealLines.append(mealEntry)
-            }
-            parts.append(mealLines.joined(separator: "\n"))
-        }
-
-        parts.append("## ルール\n- 具体的な数値（重量・セット数・回数・PFC）を含める\n- 制約事項を必ず考慮する\n- 怪我リスクには警告する\n- 回答は日本語で400字以内")
-
-        return parts.joined(separator: "\n\n")
+    /// デバッグ用: 現在のシステムプロンプトを返す
+    func previewSystemPrompt() -> String {
+        guard let context else { return "（コンテキスト未設定）" }
+        return SystemPromptBuilder(context: context).build()
     }
 
     private func buildAPIMessages(currentText: String, imageData: Data?, context: ModelContext) -> [LLMMessage] {
@@ -179,32 +121,10 @@ final class ChatViewModel {
 
     // MARK: - Data Fetching
 
-    private func fetchProfile(context: ModelContext) -> UserProfile? {
-        let descriptor = FetchDescriptor<UserProfile>()
-        return try? context.fetch(descriptor).first
-    }
-
     private func fetchLLMSetting() -> LLMSetting {
         guard let context else { return LLMSetting() }
         let descriptor = FetchDescriptor<LLMSetting>()
         return (try? context.fetch(descriptor).first) ?? LLMSetting()
-    }
-
-    private func fetchRecentSessions(context: ModelContext, limit: Int) -> [WorkoutSession] {
-        var descriptor = FetchDescriptor<WorkoutSession>(
-            sortBy: [SortDescriptor(\.date, order: .reverse)]
-        )
-        descriptor.fetchLimit = limit
-        return (try? context.fetch(descriptor)) ?? []
-    }
-
-    private func fetchRecentMeals(context: ModelContext) -> [MealRecord] {
-        let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date()
-        let descriptor = FetchDescriptor<MealRecord>(
-            predicate: #Predicate { $0.recordedAt >= twoDaysAgo },
-            sortBy: [SortDescriptor(\.recordedAt, order: .reverse)]
-        )
-        return (try? context.fetch(descriptor)) ?? []
     }
 
     private func fetchWeeklyHistory(context: ModelContext) -> [ChatMessage] {
@@ -239,13 +159,6 @@ final class ChatViewModel {
     }
 
     // MARK: - Helpers
-
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M月d日"
-        formatter.locale = Locale(identifier: "ja_JP")
-        return formatter.string(from: date)
-    }
 
     private func errorText(for error: LLMError) -> String {
         switch error {

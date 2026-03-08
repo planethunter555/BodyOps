@@ -29,6 +29,9 @@ struct MealRecordSheet: View {
 
     @State private var viewModel = MealRecordViewModel()
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var showPhotoSourceDialog = false
+    @State private var showLibraryPicker = false
+    @State private var showCamera = false
 
     var body: some View {
         NavigationStack {
@@ -51,6 +54,16 @@ struct MealRecordSheet: View {
                         dismiss()
                     }
                     .disabled(!viewModel.canSave)
+                }
+            }
+            .confirmationDialog("写真の追加方法", isPresented: $showPhotoSourceDialog, titleVisibility: .hidden) {
+                Button("カメラで撮影") { showCamera = true }
+                Button("フォトライブラリから選択") { showLibraryPicker = true }
+            }
+            .photosPicker(isPresented: $showLibraryPicker, selection: $selectedPhoto, matching: .images)
+            .sheet(isPresented: $showCamera) {
+                CameraPickerView { image in
+                    loadCameraImage(image)
                 }
             }
         }
@@ -98,9 +111,11 @@ struct MealRecordSheet: View {
                     }
                 }
             }
-            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+            Button {
+                showPhotoSourceDialog = true
+            } label: {
                 Label(
-                    viewModel.imageData == nil ? "写真を選択" : "写真を変更",
+                    viewModel.imageData == nil ? "写真を追加" : "写真を変更",
                     systemImage: "camera"
                 )
             }
@@ -169,6 +184,12 @@ struct MealRecordSheet: View {
                     viewModel.imageData = compressed
                 }
             }
+        }
+    }
+
+    private func loadCameraImage(_ image: UIImage) {
+        if let data = image.jpegData(compressionQuality: 1.0) {
+            viewModel.imageData = ImageCompressor.compress(data)
         }
     }
 }
@@ -303,5 +324,43 @@ final class MealRecordViewModel {
 
     private func resolvedDate(for date: Date) -> Date {
         Calendar.current.isDateInToday(date) ? Date() : date
+    }
+}
+
+// MARK: - Camera Picker
+
+import UIKit
+
+struct CameraPickerView: UIViewControllerRepresentable {
+    let onCapture: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: CameraPickerView
+
+        init(_ parent: CameraPickerView) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.onCapture(image)
+            }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
+        }
     }
 }

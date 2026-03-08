@@ -30,8 +30,19 @@ struct GraphView: View {
         return sessions.filter { $0.date >= cutoff }
     }
 
-    var exerciseNames: [String] {
-        let names = filteredSessions.flatMap { $0.sets }.compactMap { $0.exercise?.name }
+    /// 全セッションでの実施回数上位10種目
+    var top10Exercises: [String] {
+        var countMap: [String: Int] = [:]
+        for session in sessions {
+            let names = Set(session.sets.compactMap { $0.exercise?.name })
+            for name in names { countMap[name, default: 0] += 1 }
+        }
+        return countMap.sorted { $0.value > $1.value }.prefix(10).map { $0.key }
+    }
+
+    /// 全種目名（カスタムピッカー用）
+    var allExerciseNames: [String] {
+        let names = sessions.flatMap { $0.sets }.compactMap { $0.exercise?.name }
         return Array(Set(names)).sorted()
     }
 
@@ -41,13 +52,14 @@ struct GraphView: View {
                 periodPicker
                 weeklyVolumeChart
                 exerciseProgressChart
-                muscleGroupFrequencyChart
             }
             .padding()
         }
         .navigationTitle("グラフ")
         .navigationBarTitleDisplayMode(.inline)
     }
+
+    // MARK: - Period Picker
 
     private var periodPicker: some View {
         Picker("期間", selection: $selectedPeriod) {
@@ -57,6 +69,8 @@ struct GraphView: View {
         }
         .pickerStyle(.segmented)
     }
+
+    // MARK: - Weekly Volume Chart
 
     private var weeklyVolumeChart: some View {
         let weeklyData = computeWeeklyVolume()
@@ -69,9 +83,9 @@ struct GraphView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, minHeight: 150)
             } else {
-                Chart(weeklyData, id: \.week) { item in
+                Chart(weeklyData, id: \.weekStart) { item in
                     BarMark(
-                        x: .value("週", item.week),
+                        x: .value("週", item.weekStart, unit: .weekOfYear),
                         y: .value("ボリューム", item.volume)
                     )
                     .foregroundStyle(Color.accentColor)
@@ -84,27 +98,33 @@ struct GraphView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    // MARK: - Exercise Progress Chart
+
     private var exerciseProgressChart: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("種目別最高重量推移")
-                    .font(.headline)
-                Spacer()
-                Picker("種目", selection: $selectedExerciseName) {
-                    Text("選択...").tag("")
-                    ForEach(exerciseNames, id: \.self) { name in
-                        Text(name).tag(name)
-                    }
-                }
-                .pickerStyle(.menu)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("種目別最高重量推移")
+                .font(.headline)
+
+            // 上位10種目を常時表示
+            ForEach(top10Exercises, id: \.self) { name in
+                exerciseCard(name)
             }
 
-            let data = maxWeightProgress(for: selectedExerciseName)
-            if data.isEmpty || selectedExerciseName.isEmpty {
-                Text(selectedExerciseName.isEmpty ? "種目を選択してください" : "データがありません")
-                    .font(.subheadline)
+            // 11番目: 任意種目ピッカー + グラフ
+            customExerciseCard
+        }
+    }
+
+    private func exerciseCard(_ name: String) -> some View {
+        let data = maxWeightProgress(for: name)
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(name)
+                .font(.subheadline.bold())
+            if data.isEmpty {
+                Text("この期間にデータがありません")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 150)
+                    .frame(maxWidth: .infinity, minHeight: 80)
             } else {
                 Chart(data, id: \.date) { item in
                     LineMark(
@@ -118,7 +138,7 @@ struct GraphView: View {
                     )
                     .foregroundStyle(Color.green)
                 }
-                .frame(height: 150)
+                .frame(height: 100)
             }
         }
         .padding()
@@ -126,25 +146,46 @@ struct GraphView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    private var muscleGroupFrequencyChart: some View {
-        let frequencyData = computeMuscleGroupFrequency()
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("筋肉グループ別頻度（過去4週間）")
-                .font(.headline)
-            if frequencyData.isEmpty {
-                Text("データがありません")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 100)
-            } else {
-                Chart(frequencyData, id: \.category) { item in
-                    BarMark(
-                        x: .value("頻度", item.count),
-                        y: .value("グループ", item.category)
-                    )
-                    .foregroundStyle(Color.orange)
+    private var customExerciseCard: some View {
+        let data = maxWeightProgress(for: selectedExerciseName)
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(selectedExerciseName.isEmpty ? "種目を選択" : selectedExerciseName)
+                    .font(.subheadline.bold())
+                Spacer()
+                Menu {
+                    ForEach(allExerciseNames, id: \.self) { name in
+                        Button(name) { selectedExerciseName = name }
+                    }
+                } label: {
+                    Label("種目を選択", systemImage: "chevron.up.chevron.down")
+                        .font(.caption)
                 }
-                .frame(height: 200)
+            }
+            if selectedExerciseName.isEmpty {
+                Text("上のメニューから種目を選択してください")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, minHeight: 80)
+            } else if data.isEmpty {
+                Text("この期間にデータがありません")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, minHeight: 80)
+            } else {
+                Chart(data, id: \.date) { item in
+                    LineMark(
+                        x: .value("日付", item.date),
+                        y: .value("重量", item.weight)
+                    )
+                    .foregroundStyle(Color.accentColor)
+                    PointMark(
+                        x: .value("日付", item.date),
+                        y: .value("重量", item.weight)
+                    )
+                    .foregroundStyle(Color.accentColor)
+                }
+                .frame(height: 100)
             }
         }
         .padding()
@@ -152,42 +193,28 @@ struct GraphView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    private func computeWeeklyVolume() -> [(week: String, volume: Double)] {
+    // MARK: - Compute Helpers
+
+    private func computeWeeklyVolume() -> [(weekStart: Date, volume: Double)] {
         let calendar = Calendar.current
-        var weekMap: [String: Double] = [:]
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M/d週"
-        formatter.locale = Locale(identifier: "ja_JP")
+        var weekMap: [Date: Double] = [:]
         for session in filteredSessions {
             let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: session.date)
             let weekStart = calendar.date(from: components) ?? session.date
-            let key = formatter.string(from: weekStart)
-            weekMap[key, default: 0] += session.totalVolume
+            weekMap[weekStart, default: 0] += session.totalVolume
         }
-        return weekMap.sorted { $0.key < $1.key }.map { (week: $0.key, volume: $0.value) }
+        return weekMap.sorted { $0.key < $1.key }.map { (weekStart: $0.key, volume: $0.value) }
     }
 
     private func maxWeightProgress(for exerciseName: String) -> [(date: Date, weight: Double)] {
         guard !exerciseName.isEmpty else { return [] }
-        var result: [(date: Date, weight: Double)] = []
-        for session in filteredSessions {
-            let sets = session.sets.filter { $0.exercise?.name == exerciseName }
-            if let maxWeight = sets.map({ $0.weight }).max() {
-                result.append((date: session.date, weight: maxWeight))
-            }
+        return filteredSessions.compactMap { session in
+            let maxWeight = session.sets
+                .filter { $0.exercise?.name == exerciseName }
+                .map { $0.weight }
+                .max()
+            return maxWeight.map { (date: session.date, weight: $0) }
         }
-        return result.sorted { $0.date < $1.date }
-    }
-
-    private func computeMuscleGroupFrequency() -> [(category: String, count: Int)] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -28, to: Date()) ?? Date()
-        let recentSessions = sessions.filter { $0.date >= cutoff }
-        let categories = ["胸", "背中", "脚", "肩", "腕", "腹"]
-        return categories.map { category in
-            let count = recentSessions.filter { session in
-                session.sets.contains { $0.exercise?.category == category }
-            }.count
-            return (category: category, count: count)
-        }
+        .sorted { $0.date < $1.date }
     }
 }

@@ -1,6 +1,8 @@
 import SwiftUI
 import SwiftData
 
+extension WorkoutSession: Identifiable {}
+
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \WorkoutSession.date, order: .reverse) private var allSessions: [WorkoutSession]
@@ -10,6 +12,7 @@ struct HistoryView: View {
     @State private var selectedDate: Date?
     @State private var showGraphView = false
     @State private var showCSVImport = false
+    @State private var editingSession: WorkoutSession?
 
     let categories = ["胸", "背中", "脚", "肩", "腕", "腹"]
 
@@ -48,6 +51,9 @@ struct HistoryView: View {
             }
             .sheet(isPresented: $showCSVImport) {
                 CSVImportSheet()
+            }
+            .sheet(item: $editingSession) { session in
+                WorkoutRecordSheet(date: session.date, editingSession: session)
             }
         }
     }
@@ -90,7 +96,7 @@ struct HistoryView: View {
         let days = daysInMonth()
         let columns = Array(repeating: GridItem(.flexible()), count: 7)
         return LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { weekday in
+            ForEach(["月", "火", "水", "木", "金", "土", "日"], id: \.self) { weekday in
                 Text(weekday)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -166,17 +172,31 @@ struct HistoryView: View {
                 Text(String(format: "%.0f kg 総ボリューム", session.totalVolume))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Button {
+                    editingSession = session
+                } label: {
+                    Image(systemName: "pencil.circle")
+                        .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
             }
             let grouped = Dictionary(grouping: session.sets) { $0.exercise?.name ?? "不明" }
             ForEach(grouped.keys.sorted(), id: \.self) { exerciseName in
-                let sets = grouped[exerciseName] ?? []
-                HStack {
+                let sets = (grouped[exerciseName] ?? []).sorted { $0.setNumber < $1.setNumber }
+                VStack(alignment: .leading, spacing: 2) {
                     Text(exerciseName)
-                        .font(.caption)
-                    Spacer()
-                    Text("\(sets.count)セット")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption.bold())
+                    ForEach(sets, id: \.id) { set in
+                        HStack(spacing: 4) {
+                            Text("\(set.setNumber).")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .frame(width: 16, alignment: .trailing)
+                            Text(String(format: "%.1fkg × %d回", set.weight, set.reps))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
             }
             if !session.memo.isEmpty {
@@ -287,8 +307,11 @@ struct HistoryView: View {
     private func daysInMonth() -> [Date?] {
         let calendar = Calendar.current
         guard let range = calendar.range(of: .day, in: .month, for: currentMonth) else { return [] }
-        let firstWeekday = calendar.component(.weekday, from: currentMonth)
-        var days: [Date?] = Array(repeating: nil, count: firstWeekday - 1)
+        // iOS weekday: 1=Sun, 2=Mon, ..., 7=Sat
+        // Convert to Monday-first 0-based offset: Mon=0, Tue=1, ..., Sun=6
+        let weekday = calendar.component(.weekday, from: currentMonth)
+        let monFirstOffset = (weekday - 2 + 7) % 7
+        var days: [Date?] = Array(repeating: nil, count: monFirstOffset)
         for day in range {
             if let date = calendar.date(byAdding: .day, value: day - 1, to: currentMonth) {
                 days.append(date)

@@ -63,5 +63,14 @@
   {"name": "ドラゴンフラッグ", "category": "腹"},
   {"name": "アブローラー", "category": "腹"},
   {"name": "ケーブルクランチ", "category": "腹"},
-  {"name": "ハンギングレッグレイズ", "category": "腹"}
+  {"name": "ハンギングレッグレイズ", "category": "腹"},
+
+  {"name": "ダンベルローイング", "category": "背中"},
+  {"name": "インクラインダンベルプレス", "category": "胸"},
+  {"name": "フラットダンベルレイズ", "category": "胸"},
+  {"name": "リアデルト", "category": "肩"},
+  {"name": "リアレイズ", "category": "肩"},
+  {"name": "I-Y-Tレイズ", "category": "肩"},
+  {"name": "アームカール", "category": "腕"},
+  {"name": "インクラインアームカール", "category": "腕"}
 ]

@@ -9,6 +9,10 @@ final class TodayViewModel {
     var workoutSessions: [WorkoutSession] = []
     var mealRecords: [MealRecord] = []
 
+    var firstWorkoutDate: Date? = nil
+    var totalSessionCount: Int = 0
+    var userGoal: String = ""
+
     var showWorkoutSheet = false
     var showMealSheet = false
 
@@ -47,6 +51,19 @@ final class TodayViewModel {
         )
         workoutSessions = (try? context.fetch(sessionDescriptor)) ?? []
         mealRecords = (try? context.fetch(mealDescriptor)) ?? []
+
+        // 通算データ
+        var firstDescriptor = FetchDescriptor<WorkoutSession>(
+            sortBy: [SortDescriptor(\.date)]
+        )
+        firstDescriptor.fetchLimit = 1
+        firstWorkoutDate = (try? context.fetch(firstDescriptor))?.first?.date
+
+        let allDescriptor = FetchDescriptor<WorkoutSession>()
+        totalSessionCount = (try? context.fetch(allDescriptor))?.count ?? 0
+
+        let profileDescriptor = FetchDescriptor<UserProfile>()
+        userGoal = (try? context.fetch(profileDescriptor))?.first?.goals ?? ""
     }
 
     var totalVolume: Double {

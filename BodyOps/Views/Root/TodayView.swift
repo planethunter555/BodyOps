@@ -12,6 +12,7 @@ struct TodayView: View {
                     dateNavigationHeader
                     workoutSummaryCard
                     mealSummaryCard
+                    encourageCard
                 }
                 .padding()
             }
@@ -138,6 +139,70 @@ struct TodayView: View {
         .padding()
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var encourageCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("あなたの記録", systemImage: "flame.fill")
+                .font(.headline)
+                .foregroundStyle(.orange)
+
+            if let firstDate = viewModel.firstWorkoutDate {
+                let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: firstDate), to: Calendar.current.startOfDay(for: Date())).day ?? 0
+                HStack(spacing: 24) {
+                    VStack {
+                        Text("Day \(days + 1)")
+                            .font(.title2.bold())
+                        Text("筋トレ開始から")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    VStack {
+                        Text("\(viewModel.totalSessionCount)")
+                            .font(.title2.bold())
+                        Text("通算セッション")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+
+                Text(encourageMessage(days: days, sessions: viewModel.totalSessionCount))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("最初の筋トレ記録を追加しましょう！")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            if !viewModel.userGoal.isEmpty {
+                Divider()
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "target")
+                        .foregroundStyle(.orange)
+                        .font(.caption)
+                    Text(viewModel.userGoal)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
+            }
+        }
+        .padding()
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func encourageMessage(days: Int, sessions: Int) -> String {
+        switch days {
+        case 0...7:   return "スタートダッシュ！最初の一歩を踏み出しました💪"
+        case 8...30:  return "いいペースで続いています。継続は力なり！"
+        case 31...90: return "1ヶ月以上継続中！習慣化できてきましたね🔥"
+        case 91...180: return "3ヶ月以上！本当の変化が現れてくる時期です⚡️"
+        case 181...365: return "半年継続！あなたの努力は本物です🏆"
+        default:       return "1年以上継続！真のアスリートです🎖️"
+        }
     }
 
     private func pfcRow(label: String, value: Double, color: Color) -> some View {

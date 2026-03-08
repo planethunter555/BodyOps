@@ -13,18 +13,32 @@ final class ExercisePresetService {
         self.context = context
     }
 
+    /// プリセット種目をシードする。
+    /// - 新規プリセットはDBに追加する。
+    /// - 既存種目でカテゴリが「その他」のものは正しいカテゴリに更新する。
     func seedIfNeeded() throws {
-        let count = try context.fetchCount(FetchDescriptor<Exercise>(
-            predicate: #Predicate { $0.isPreset }
-        ))
-        guard count == 0 else { return }
-
         let entries = try loadPresets()
+        var changed = false
+
         for entry in entries {
-            let exercise = Exercise(name: entry.name, category: entry.category, isPreset: true)
-            context.insert(exercise)
+            let name = entry.name
+            let descriptor = FetchDescriptor<Exercise>(
+                predicate: #Predicate { $0.name == name }
+            )
+            if let existing = try context.fetch(descriptor).first {
+                if existing.category == "その他" {
+                    existing.category = entry.category
+                    changed = true
+                }
+            } else {
+                context.insert(Exercise(name: entry.name, category: entry.category, isPreset: true))
+                changed = true
+            }
         }
-        try context.save()
+
+        if changed {
+            try context.save()
+        }
     }
 
     private func loadPresets() throws -> [ExercisePresetEntry] {
