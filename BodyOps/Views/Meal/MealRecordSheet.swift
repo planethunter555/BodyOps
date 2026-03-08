@@ -20,11 +20,6 @@ private enum MealType: String, CaseIterable {
     }
 }
 
-private enum PhotoSource: String, CaseIterable {
-    case library, camera
-    var label: String { self == .library ? "ライブラリ" : "カメラ" }
-    var icon: String  { self == .library ? "photo.on.rectangle" : "camera.fill" }
-}
 
 // MARK: - Sheet
 
@@ -309,36 +304,28 @@ final class MealRecordViewModel {
 private struct PhotoSourceSheet: View {
     let onImagePicked: (Data) -> Void
     @Environment(\.dismiss) private var dismiss
-    @State private var source: PhotoSource = .library
+    @State private var showingCamera = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            Picker("", selection: $source) {
-                ForEach(PhotoSource.allCases, id: \.self) { s in
-                    Label(s.label, systemImage: s.icon).tag(s)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal)
-            .padding(.vertical, 12)
-            .background(.bar)
-
-            Divider()
-
-            if source == .library {
-                PhotoLibraryPicker { data in
+        if showingCamera {
+            // カメラ全画面。撮影 or キャンセルでシートが閉じる
+            CameraPickerView { image in
+                if let data = image.jpegData(compressionQuality: 1.0) {
                     onImagePicked(ImageCompressor.compress(data))
-                    dismiss()
                 }
-                .ignoresSafeArea()
-            } else {
-                CameraPickerView { image in
-                    if let data = image.jpegData(compressionQuality: 1.0) {
-                        onImagePicked(ImageCompressor.compress(data))
-                    }
-                }
-                .ignoresSafeArea()
             }
+            .ignoresSafeArea()
+        } else {
+            // ライブラリ。ナビバーにトグル付き
+            PhotoLibraryPicker(
+                onPick: { jpeg in
+                    onImagePicked(ImageCompressor.compress(jpeg))
+                    dismiss()
+                },
+                onCancel: { dismiss() },
+                onSwitchToCamera: { showingCamera = true }
+            )
+            .ignoresSafeArea()
         }
     }
 }
@@ -346,19 +333,31 @@ private struct PhotoSourceSheet: View {
 // MARK: - Photo Library Picker
 
 private struct PhotoLibraryPicker: UIViewControllerRepresentable {
-    /// バックグラウンドスレッドで JPEG 変換済みの Data を渡す（UIImage は非 Sendable のため）
     let onPick: (Data) -> Void
+    let onCancel: () -> Void
+    let onSwitchToCamera: () -> Void
 
-    func makeUIViewController(context: Context) -> PHPickerViewController {
+    func makeUIViewController(context: Context) -> UINavigationController {
         var config = PHPickerConfiguration()
         config.filter = .images
         config.selectionLimit = 1
         let picker = PHPickerViewController(configuration: config)
         picker.delegate = context.coordinator
-        return picker
+
+        // ナビバーのタイトル部分にライブラリ｜カメラのトグルを配置
+        let seg = UISegmentedControl(items: ["ライブラリ", "カメラ"])
+        seg.selectedSegmentIndex = 0
+        seg.addTarget(
+            context.coordinator,
+            action: #selector(Coordinator.segmentChanged(_:)),
+            for: .valueChanged
+        )
+        picker.navigationItem.titleView = seg
+
+        return UINavigationController(rootViewController: picker)
     }
 
-    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UINavigationController, context: Context) {}
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -366,11 +365,20 @@ private struct PhotoLibraryPicker: UIViewControllerRepresentable {
         let parent: PhotoLibraryPicker
         init(_ parent: PhotoLibraryPicker) { self.parent = parent }
 
+        @objc func segmentChanged(_ seg: UISegmentedControl) {
+            if seg.selectedSegmentIndex == 1 {
+                parent.onSwitchToCamera()
+            }
+        }
+
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-            guard let result = results.first else { return } // キャンセル → シートを閉じない
+            // Cancel タップ時は results が空 → シートを閉じる
+            guard let result = results.first else {
+                DispatchQueue.main.async { self.parent.onCancel() }
+                return
+            }
             let onPick = parent.onPick
             result.itemProvider.loadObject(ofClass: UIImage.self) { object, _ in
-                // バックグラウンドスレッドで Data に変換してから main へ渡す
                 guard let image = object as? UIImage,
                       let jpeg = image.jpegData(compressionQuality: 1.0) else { return }
                 DispatchQueue.main.async { onPick(jpeg) }
