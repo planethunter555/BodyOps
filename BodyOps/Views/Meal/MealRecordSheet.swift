@@ -20,6 +20,12 @@ private enum MealType: String, CaseIterable {
     }
 }
 
+private enum PhotoSource: String, CaseIterable {
+    case library, camera
+    var label: String { self == .library ? "ライブラリ" : "カメラ" }
+    var icon: String  { self == .library ? "photo.on.rectangle" : "camera.fill" }
+}
+
 // MARK: - Sheet
 
 struct MealRecordSheet: View {
@@ -29,7 +35,7 @@ struct MealRecordSheet: View {
 
     @State private var viewModel = MealRecordViewModel()
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var showPhotoSourceDialog = false
+    @State private var photoSource: PhotoSource = .library
     @State private var showLibraryPicker = false
     @State private var showCamera = false
 
@@ -55,10 +61,6 @@ struct MealRecordSheet: View {
                     }
                     .disabled(!viewModel.canSave)
                 }
-            }
-            .confirmationDialog("写真の追加方法", isPresented: $showPhotoSourceDialog, titleVisibility: .hidden) {
-                Button("カメラで撮影") { showCamera = true }
-                Button("フォトライブラリから選択") { showLibraryPicker = true }
             }
             .photosPicker(isPresented: $showLibraryPicker, selection: $selectedPhoto, matching: .images)
             .sheet(isPresented: $showCamera) {
@@ -94,6 +96,28 @@ struct MealRecordSheet: View {
 
     private var photoSection: some View {
         Section("写真（任意）") {
+            // ライブラリ / カメラ 切り替え
+            Picker("", selection: $photoSource) {
+                ForEach(PhotoSource.allCases, id: \.self) { source in
+                    Label(source.label, systemImage: source.icon).tag(source)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            // 選択中のソースに応じてギャラリーまたはカメラを直接起動
+            Button {
+                switch photoSource {
+                case .library: showLibraryPicker = true
+                case .camera:  showCamera = true
+                }
+            } label: {
+                Label(
+                    viewModel.imageData == nil ? "写真を追加" : "写真を変更",
+                    systemImage: photoSource.icon
+                )
+            }
+
+            // 選択済み画像プレビュー
             if let img = viewModel.previewImage {
                 HStack {
                     Image(uiImage: img)
@@ -110,14 +134,6 @@ struct MealRecordSheet: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-            }
-            Button {
-                showPhotoSourceDialog = true
-            } label: {
-                Label(
-                    viewModel.imageData == nil ? "写真を追加" : "写真を変更",
-                    systemImage: "camera"
-                )
             }
         }
     }
