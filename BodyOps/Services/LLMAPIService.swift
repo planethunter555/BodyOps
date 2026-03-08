@@ -104,15 +104,82 @@ final class LLMAPIService: @unchecked Sendable {
         messages: [LLMMessage],
         system: String,
         provider: LLMProvider,
-        modelName: String = ""
+        modelName: String = "",
+        stream: Bool = true
     ) throws -> Data {
         switch provider {
         case .claude:
-            return try buildClaudeBody(messages: messages, system: system, modelName: modelName)
+            return try buildClaudeBody(messages: messages, system: system, modelName: modelName, stream: stream)
         case .openai:
-            return try buildOpenAIBody(messages: messages, system: system, modelName: modelName)
+            return try buildOpenAIBody(messages: messages, system: system, modelName: modelName, stream: stream)
         case .gemini:
             return try buildGeminiBody(messages: messages, system: system)
+        }
+    }
+
+    /// ストリーミング不要な単発リクエスト（PFC推定など）用。
+    /// stream: false で送ってシンプルなJSONを1回で受け取るため、SSEパース起因の初回失敗が起きない。
+    func sendOnce(
+        messages: [LLMMessage],
+        system: String,
+        provider: LLMProvider,
+        apiKey: String,
+        modelName: String = ""
+    ) async throws -> String {
+        var request = URLRequest(url: nonStreamingEndpointURL(for: provider, modelName: modelName))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        applyAuthHeaders(to: &request, provider: provider, apiKey: apiKey)
+        request.httpBody = try buildRequestBody(
+            messages: messages, system: system, provider: provider, modelName: modelName, stream: false
+        )
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else { throw LLMError.serverError }
+
+        switch httpResponse.statusCode {
+        case 200: return try extractResponseText(from: data, provider: provider)
+        case 401: throw LLMError.unauthorized
+        case 429: throw LLMError.rateLimited
+        default:  throw LLMError.serverError
+        }
+    }
+
+    private func nonStreamingEndpointURL(for provider: LLMProvider, modelName: String) -> URL {
+        switch provider {
+        case .claude:
+            // swiftlint:disable:next force_unwrapping
+            return URL(string: "https://api.anthropic.com/v1/messages")!
+        case .openai:
+            // swiftlint:disable:next force_unwrapping
+            return URL(string: "https://api.openai.com/v1/chat/completions")!
+        case .gemini:
+            let model = modelName.isEmpty ? "gemini-2.0-flash" : modelName
+            // swiftlint:disable:next force_unwrapping
+            return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent")!
+        }
+    }
+
+    private func extractResponseText(from data: Data, provider: LLMProvider) throws -> String {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw LLMError.serverError
+        }
+        switch provider {
+        case .claude:
+            guard let content = json["content"] as? [[String: Any]],
+                  let text = content.first?["text"] as? String else { throw LLMError.serverError }
+            return text
+        case .openai:
+            guard let choices = json["choices"] as? [[String: Any]],
+                  let message = choices.first?["message"] as? [String: Any],
+                  let text = message["content"] as? String else { throw LLMError.serverError }
+            return text
+        case .gemini:
+            guard let candidates = json["candidates"] as? [[String: Any]],
+                  let content = candidates.first?["content"] as? [String: Any],
+                  let parts = content["parts"] as? [[String: Any]],
+                  let text = parts.first?["text"] as? String else { throw LLMError.serverError }
+            return text
         }
     }
 
@@ -135,7 +202,7 @@ final class LLMAPIService: @unchecked Sendable {
         }
     }
 
-    private func buildClaudeBody(messages: [LLMMessage], system: String, modelName: String) throws -> Data {
+    private func buildClaudeBody(messages: [LLMMessage], system: String, modelName: String, stream: Bool = true) throws -> Data {
         let model = modelName.isEmpty ? LLMProvider.claude.defaultModel : modelName
         let encodedMessages = messages.map { msg -> ClaudeMessagePayload in
             if let imgData = msg.imageData {
@@ -152,7 +219,7 @@ final class LLMAPIService: @unchecked Sendable {
         let payload = ClaudeRequestPayload(
             model: model,
             maxTokens: 1024,
-            stream: true,
+            stream: stream,
             system: system.isEmpty ? nil : system,
             messages: encodedMessages
         )
@@ -161,7 +228,7 @@ final class LLMAPIService: @unchecked Sendable {
         return try encoder.encode(payload)
     }
 
-    private func buildOpenAIBody(messages: [LLMMessage], system: String, modelName: String) throws -> Data {
+    private func buildOpenAIBody(messages: [LLMMessage], system: String, modelName: String, stream: Bool = true) throws -> Data {
         var apiMessages: [[String: Any]] = []
         if !system.isEmpty {
             apiMessages.append(["role": "system", "content": system])
@@ -181,7 +248,7 @@ final class LLMAPIService: @unchecked Sendable {
         }
         let body: [String: Any] = [
             "model": modelName.isEmpty ? LLMProvider.openai.defaultModel : modelName,
-            "stream": true,
+            "stream": stream,
             "messages": apiMessages
         ]
         return try JSONSerialization.data(withJSONObject: body)

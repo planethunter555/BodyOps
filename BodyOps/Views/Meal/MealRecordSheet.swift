@@ -2,6 +2,22 @@ import SwiftUI
 import SwiftData
 import PhotosUI
 
+// MARK: - Models
+
+struct EstimationItem {
+    let name: String
+    let amount: String
+    let calories: Double
+    let protein: Double
+    let fat: Double
+    let carbs: Double
+}
+
+struct EstimationDetails {
+    let items: [EstimationItem]
+    let summary: String?
+}
+
 // MARK: - Meal Type
 
 private enum MealType: String, CaseIterable {
@@ -133,10 +149,42 @@ struct MealRecordSheet: View {
                     .font(.caption)
                     .foregroundStyle(.red)
             }
-            if viewModel.estimationSucceeded {
-                Label("推定完了。値を確認・修正してください。", systemImage: "checkmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.green)
+            if let details = viewModel.estimationDetails {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("推定完了。値を確認・修正してください。", systemImage: "checkmark.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+
+                    if !details.items.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("推定内訳：")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+
+                            ForEach(details.items, id: \.name) { item in
+                                HStack(spacing: 4) {
+                                    Text("• \(item.name)")
+                                        .font(.caption2)
+                                    Text("(\(item.amount))")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Text("P:\(Int(item.protein))g F:\(Int(item.fat))g C:\(Int(item.carbs))g")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+
+                    if let summary = details.summary, !summary.isEmpty {
+                        Text(summary)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 2)
+                    }
+                }
             }
         } header: {
             Text("AI推定")
@@ -181,6 +229,7 @@ final class MealRecordViewModel {
     var isEstimating = false
     var estimationError: String?
     var estimationSucceeded = false
+    var estimationDetails: EstimationDetails?
 
     var previewImage: UIImage? {
         guard let data = imageData else { return nil }
@@ -217,17 +266,15 @@ final class MealRecordViewModel {
         let messages = [LLMMessage(role: "user", content: buildPrompt(description: trimmed), imageData: imageData)]
         let system = "栄養の専門家として、必ずJSONのみで返答してください。説明やmarkdownは不要です。"
 
-        var fullResponse = ""
         do {
-            for try await chunk in LLMAPIService().sendMessage(
+            // stream: false の非ストリーミングリクエストで1回確実に取得する
+            let fullResponse = try await LLMAPIService().sendOnce(
                 messages: messages,
                 system: system,
                 provider: setting.provider,
                 apiKey: apiKey,
                 modelName: setting.modelName
-            ) {
-                fullResponse += chunk
-            }
+            )
             parseAndApply(response: fullResponse)
         } catch {
             estimationError = "AI推定に失敗しました。手動で入力してください。"
@@ -260,7 +307,28 @@ final class MealRecordViewModel {
         var parts = ["以下の食事のカロリーとPFCを推定してください。"]
         if !description.isEmpty { parts.append("食事内容: \(description)") }
         if imageData != nil { parts.append("（添付の食事写真も参考にしてください）") }
-        parts.append("JSON形式のみで返答: {\"calories\": 数値, \"protein\": 数値, \"fat\": 数値, \"carbs\": 数値}")
+        parts.append("""
+        JSON形式のみで返答してください:
+        {
+          "total": {
+            "calories": 数値,
+            "protein": 数値,
+            "fat": 数値,
+            "carbs": 数値
+          },
+          "items": [
+            {
+              "name": "食材名",
+              "amount": "分量",
+              "calories": 数値,
+              "protein": 数値,
+              "fat": 数値,
+              "carbs": 数値
+            }
+          ],
+          "summary": "簡単な説明（1文）"
+        }
+        """)
         return parts.joined(separator: "\n")
     }
 
@@ -281,11 +349,41 @@ final class MealRecordViewModel {
             estimationError = "JSONの解析に失敗しました。手動で入力してください。"
             return
         }
-        calories = numericValue(json["calories"])
-        protein = numericValue(json["protein"])
-        fat = numericValue(json["fat"])
-        carbs = numericValue(json["carbs"])
-        estimationSucceeded = true
+
+        // 新形式を試す
+        if let total = json["total"] as? [String: Any] {
+            calories = numericValue(total["calories"])
+            protein = numericValue(total["protein"])
+            fat = numericValue(total["fat"])
+            carbs = numericValue(total["carbs"])
+
+            var items: [EstimationItem] = []
+            if let itemsArray = json["items"] as? [[String: Any]] {
+                for itemDict in itemsArray {
+                    let item = EstimationItem(
+                        name: itemDict["name"] as? String ?? "",
+                        amount: itemDict["amount"] as? String ?? "",
+                        calories: numericValue(itemDict["calories"]),
+                        protein: numericValue(itemDict["protein"]),
+                        fat: numericValue(itemDict["fat"]),
+                        carbs: numericValue(itemDict["carbs"])
+                    )
+                    items.append(item)
+                }
+            }
+
+            let summary = json["summary"] as? String
+            estimationDetails = EstimationDetails(items: items, summary: summary)
+            estimationSucceeded = true
+        } else {
+            // 旧形式（後方互換性）
+            calories = numericValue(json["calories"])
+            protein = numericValue(json["protein"])
+            fat = numericValue(json["fat"])
+            carbs = numericValue(json["carbs"])
+            estimationDetails = EstimationDetails(items: [], summary: nil)
+            estimationSucceeded = true
+        }
     }
 
     private func numericValue(_ value: Any?) -> Double {
