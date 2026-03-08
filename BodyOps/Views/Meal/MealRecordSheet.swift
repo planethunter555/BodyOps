@@ -34,10 +34,7 @@ struct MealRecordSheet: View {
     let date: Date
 
     @State private var viewModel = MealRecordViewModel()
-    @State private var selectedPhoto: PhotosPickerItem?
-    @State private var photoSource: PhotoSource = .library
-    @State private var showLibraryPicker = false
-    @State private var showCamera = false
+    @State private var showPhotoSourceSheet = false
 
     var body: some View {
         NavigationStack {
@@ -62,15 +59,11 @@ struct MealRecordSheet: View {
                     .disabled(!viewModel.canSave)
                 }
             }
-            .photosPicker(isPresented: $showLibraryPicker, selection: $selectedPhoto, matching: .images)
-            .sheet(isPresented: $showCamera) {
-                CameraPickerView { image in
-                    loadCameraImage(image)
+            .sheet(isPresented: $showPhotoSourceSheet) {
+                PhotoSourceSheet { data in
+                    viewModel.imageData = data
                 }
             }
-        }
-        .onChange(of: selectedPhoto) { _, item in
-            loadPhoto(item)
         }
     }
 
@@ -96,28 +89,15 @@ struct MealRecordSheet: View {
 
     private var photoSection: some View {
         Section("写真（任意）") {
-            // ライブラリ / カメラ 切り替え
-            Picker("", selection: $photoSource) {
-                ForEach(PhotoSource.allCases, id: \.self) { source in
-                    Label(source.label, systemImage: source.icon).tag(source)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            // 選択中のソースに応じてギャラリーまたはカメラを直接起動
             Button {
-                switch photoSource {
-                case .library: showLibraryPicker = true
-                case .camera:  showCamera = true
-                }
+                showPhotoSourceSheet = true
             } label: {
                 Label(
                     viewModel.imageData == nil ? "写真を追加" : "写真を変更",
-                    systemImage: photoSource.icon
+                    systemImage: "photo.on.rectangle"
                 )
             }
 
-            // 選択済み画像プレビュー
             if let img = viewModel.previewImage {
                 HStack {
                     Image(uiImage: img)
@@ -128,7 +108,6 @@ struct MealRecordSheet: View {
                     Spacer()
                     Button(role: .destructive) {
                         viewModel.imageData = nil
-                        selectedPhoto = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.secondary)
@@ -188,24 +167,6 @@ struct MealRecordSheet: View {
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
                 .frame(width: 80)
-        }
-    }
-
-    private func loadPhoto(_ item: PhotosPickerItem?) {
-        guard let item else { return }
-        Task {
-            if let data = try? await item.loadTransferable(type: Data.self) {
-                let compressed = ImageCompressor.compress(data)
-                await MainActor.run {
-                    viewModel.imageData = compressed
-                }
-            }
-        }
-    }
-
-    private func loadCameraImage(_ image: UIImage) {
-        if let data = image.jpegData(compressionQuality: 1.0) {
-            viewModel.imageData = ImageCompressor.compress(data)
         }
     }
 }
@@ -340,6 +301,81 @@ final class MealRecordViewModel {
 
     private func resolvedDate(for date: Date) -> Date {
         Calendar.current.isDateInToday(date) ? Date() : date
+    }
+}
+
+// MARK: - Photo Source Sheet
+
+private struct PhotoSourceSheet: View {
+    let onImagePicked: (Data) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var source: PhotoSource = .library
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Picker("", selection: $source) {
+                ForEach(PhotoSource.allCases, id: \.self) { s in
+                    Label(s.label, systemImage: s.icon).tag(s)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+            .background(.bar)
+
+            Divider()
+
+            if source == .library {
+                PhotoLibraryPicker { data in
+                    onImagePicked(ImageCompressor.compress(data))
+                    dismiss()
+                }
+                .ignoresSafeArea()
+            } else {
+                CameraPickerView { image in
+                    if let data = image.jpegData(compressionQuality: 1.0) {
+                        onImagePicked(ImageCompressor.compress(data))
+                    }
+                }
+                .ignoresSafeArea()
+            }
+        }
+    }
+}
+
+// MARK: - Photo Library Picker
+
+private struct PhotoLibraryPicker: UIViewControllerRepresentable {
+    /// バックグラウンドスレッドで JPEG 変換済みの Data を渡す（UIImage は非 Sendable のため）
+    let onPick: (Data) -> Void
+
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var config = PHPickerConfiguration()
+        config.filter = .images
+        config.selectionLimit = 1
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        let parent: PhotoLibraryPicker
+        init(_ parent: PhotoLibraryPicker) { self.parent = parent }
+
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            guard let result = results.first else { return } // キャンセル → シートを閉じない
+            let onPick = parent.onPick
+            result.itemProvider.loadObject(ofClass: UIImage.self) { object, _ in
+                // バックグラウンドスレッドで Data に変換してから main へ渡す
+                guard let image = object as? UIImage,
+                      let jpeg = image.jpegData(compressionQuality: 1.0) else { return }
+                DispatchQueue.main.async { onPick(jpeg) }
+            }
+        }
     }
 }
 
