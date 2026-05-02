@@ -13,6 +13,9 @@ struct HistoryView: View {
     @State private var showGraphView = false
     @State private var showCSVImport = false
     @State private var editingSession: WorkoutSession?
+    @State private var showWorkoutSheet = false
+    @State private var deletingSession: WorkoutSession?
+    @State private var deletingMeal: MealRecord?
 
     let categories = ["胸", "背中", "脚", "肩", "腕", "腹"]
 
@@ -54,6 +57,33 @@ struct HistoryView: View {
             }
             .sheet(item: $editingSession) { session in
                 WorkoutRecordSheet(date: session.date, editingSession: session)
+            }
+            .sheet(isPresented: $showWorkoutSheet) {
+                if let date = selectedDate {
+                    WorkoutRecordSheet(date: date)
+                }
+            }
+            .alert("筋トレ記録を削除", isPresented: Binding(
+                get: { deletingSession != nil },
+                set: { if !$0 { deletingSession = nil } }
+            )) {
+                Button("削除", role: .destructive) {
+                    if let s = deletingSession { deleteSession(s) }
+                }
+                Button("キャンセル", role: .cancel) { deletingSession = nil }
+            } message: {
+                Text("この筋トレ記録を削除しますか？この操作は取り消せません。")
+            }
+            .alert("食事記録を削除", isPresented: Binding(
+                get: { deletingMeal != nil },
+                set: { if !$0 { deletingMeal = nil } }
+            )) {
+                Button("削除", role: .destructive) {
+                    if let m = deletingMeal { deleteMeal(m) }
+                }
+                Button("キャンセル", role: .cancel) { deletingMeal = nil }
+            } message: {
+                Text("この食事記録を削除しますか？この操作は取り消せません。")
             }
         }
     }
@@ -140,6 +170,7 @@ struct HistoryView: View {
     private func dayDetailSection(for date: Date) -> some View {
         let sessions = sessionsForDate(date)
         let meals = mealsForDate(date)
+        let isFuture = date > Date()
         return VStack(alignment: .leading, spacing: 12) {
             Text(dayDetailTitle(date))
                 .font(.headline)
@@ -156,6 +187,17 @@ struct HistoryView: View {
 
             ForEach(meals) { meal in
                 mealDetailCard(meal: meal)
+            }
+
+            if !isFuture {
+                Button {
+                    showWorkoutSheet = true
+                } label: {
+                    Label("筋トレを記録する", systemImage: "plus.circle.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(.borderedProminent)
             }
         }
         .padding()
@@ -177,6 +219,13 @@ struct HistoryView: View {
                 } label: {
                     Image(systemName: "pencil.circle")
                         .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
+                Button {
+                    deletingSession = session
+                } label: {
+                    Image(systemName: "trash.circle")
+                        .foregroundStyle(Color.red)
                 }
                 .buttonStyle(.plain)
             }
@@ -227,6 +276,13 @@ struct HistoryView: View {
                 Text("\(Int(meal.calories)) kcal")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Button {
+                    deletingMeal = meal
+                } label: {
+                    Image(systemName: "trash.circle")
+                        .foregroundStyle(Color.red)
+                }
+                .buttonStyle(.plain)
             }
             if !meal.mealDescription.isEmpty {
                 Text(meal.mealDescription)
@@ -302,6 +358,16 @@ struct HistoryView: View {
         formatter.dateFormat = "M月d日(E)"
         formatter.locale = Locale(identifier: "ja_JP")
         return formatter.string(from: date)
+    }
+
+    private func deleteSession(_ session: WorkoutSession) {
+        modelContext.delete(session)
+        try? modelContext.save()
+    }
+
+    private func deleteMeal(_ meal: MealRecord) {
+        modelContext.delete(meal)
+        try? modelContext.save()
     }
 
     private func daysInMonth() -> [Date?] {

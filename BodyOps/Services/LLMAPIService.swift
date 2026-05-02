@@ -58,7 +58,8 @@ final class LLMAPIService: @unchecked Sendable {
         system: String,
         provider: LLMProvider,
         apiKey: String,
-        modelName: String = ""
+        modelName: String = "",
+        onUsage: (@Sendable (Int, Int) -> Void)? = nil  // (inputTokens, outputTokens)
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             Task { @Sendable in
@@ -79,9 +80,12 @@ final class LLMAPIService: @unchecked Sendable {
 
                     switch httpResponse.statusCode {
                     case 200:
-                        let chunks = parseSSEResponse(data: data, provider: provider)
+                        let (chunks, inputTokens, outputTokens) = parseSSEResponse(data: data, provider: provider)
                         for chunk in chunks {
                             continuation.yield(chunk)
+                        }
+                        if inputTokens > 0 || outputTokens > 0 {
+                            onUsage?(inputTokens, outputTokens)
                         }
                         continuation.finish()
                     case 401:
@@ -119,13 +123,14 @@ final class LLMAPIService: @unchecked Sendable {
 
     /// ストリーミング不要な単発リクエスト（PFC推定など）用。
     /// stream: false で送ってシンプルなJSONを1回で受け取るため、SSEパース起因の初回失敗が起きない。
+    /// 戻り値: (レスポンステキスト, inputTokens, outputTokens)
     func sendOnce(
         messages: [LLMMessage],
         system: String,
         provider: LLMProvider,
         apiKey: String,
         modelName: String = ""
-    ) async throws -> String {
+    ) async throws -> (text: String, inputTokens: Int, outputTokens: Int) {
         var request = URLRequest(url: nonStreamingEndpointURL(for: provider, modelName: modelName))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -138,7 +143,7 @@ final class LLMAPIService: @unchecked Sendable {
         guard let httpResponse = response as? HTTPURLResponse else { throw LLMError.serverError }
 
         switch httpResponse.statusCode {
-        case 200: return try extractResponseText(from: data, provider: provider)
+        case 200: return try extractResponse(from: data, provider: provider)
         case 401: throw LLMError.unauthorized
         case 429: throw LLMError.rateLimited
         default:  throw LLMError.serverError
@@ -160,7 +165,8 @@ final class LLMAPIService: @unchecked Sendable {
         }
     }
 
-    private func extractResponseText(from data: Data, provider: LLMProvider) throws -> String {
+    /// 非ストリーミングレスポンスからテキストとトークン数を抽出する
+    private func extractResponse(from data: Data, provider: LLMProvider) throws -> (text: String, inputTokens: Int, outputTokens: Int) {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw LLMError.serverError
         }
@@ -168,18 +174,27 @@ final class LLMAPIService: @unchecked Sendable {
         case .claude:
             guard let content = json["content"] as? [[String: Any]],
                   let text = content.first?["text"] as? String else { throw LLMError.serverError }
-            return text
+            let usage = json["usage"] as? [String: Any]
+            return (text,
+                    usage?["input_tokens"] as? Int ?? 0,
+                    usage?["output_tokens"] as? Int ?? 0)
         case .openai:
             guard let choices = json["choices"] as? [[String: Any]],
                   let message = choices.first?["message"] as? [String: Any],
                   let text = message["content"] as? String else { throw LLMError.serverError }
-            return text
+            let usage = json["usage"] as? [String: Any]
+            return (text,
+                    usage?["prompt_tokens"] as? Int ?? 0,
+                    usage?["completion_tokens"] as? Int ?? 0)
         case .gemini:
             guard let candidates = json["candidates"] as? [[String: Any]],
                   let content = candidates.first?["content"] as? [String: Any],
                   let parts = content["parts"] as? [[String: Any]],
                   let text = parts.first?["text"] as? String else { throw LLMError.serverError }
-            return text
+            let meta = json["usageMetadata"] as? [String: Any]
+            return (text,
+                    meta?["promptTokenCount"] as? Int ?? 0,
+                    meta?["candidatesTokenCount"] as? Int ?? 0)
         }
     }
 
@@ -246,11 +261,15 @@ final class LLMAPIService: @unchecked Sendable {
                 apiMessages.append(["role": msg.role, "content": msg.content])
             }
         }
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": modelName.isEmpty ? LLMProvider.openai.defaultModel : modelName,
             "stream": stream,
             "messages": apiMessages
         ]
+        // ストリーミング時はトークン数をレスポンスに含める
+        if stream {
+            body["stream_options"] = ["include_usage": true]
+        }
         return try JSONSerialization.data(withJSONObject: body)
     }
 
@@ -275,10 +294,12 @@ final class LLMAPIService: @unchecked Sendable {
         return try JSONSerialization.data(withJSONObject: body)
     }
 
-    private func parseSSEResponse(data: Data, provider: LLMProvider) -> [String] {
-        guard let text = String(data: data, encoding: .utf8) else { return [] }
+    private func parseSSEResponse(data: Data, provider: LLMProvider) -> (chunks: [String], inputTokens: Int, outputTokens: Int) {
+        guard let text = String(data: data, encoding: .utf8) else { return ([], 0, 0) }
         let lines = text.components(separatedBy: "\n")
         var chunks: [String] = []
+        var inputTokens = 0
+        var outputTokens = 0
 
         for line in lines {
             let stripped = line.hasPrefix("data: ") ? String(line.dropFirst(6)) : line
@@ -288,9 +309,21 @@ final class LLMAPIService: @unchecked Sendable {
 
             switch provider {
             case .claude:
+                // テキストチャンク
                 if let delta = json["delta"] as? [String: Any],
-                   let text = delta["text"] as? String {
-                    chunks.append(text)
+                   let t = delta["text"] as? String {
+                    chunks.append(t)
+                }
+                // message_start → input tokens
+                if let message = json["message"] as? [String: Any],
+                   let usage = message["usage"] as? [String: Any],
+                   let n = usage["input_tokens"] as? Int {
+                    inputTokens = n
+                }
+                // message_delta → output tokens
+                if let usage = json["usage"] as? [String: Any],
+                   let n = usage["output_tokens"] as? Int {
+                    outputTokens = n
                 }
             case .openai:
                 if let choices = json["choices"] as? [[String: Any]],
@@ -298,16 +331,26 @@ final class LLMAPIService: @unchecked Sendable {
                    let content = delta["content"] as? String {
                     chunks.append(content)
                 }
+                // stream_options: include_usage: true の最終チャンク
+                if let usage = json["usage"] as? [String: Any] {
+                    inputTokens = usage["prompt_tokens"] as? Int ?? inputTokens
+                    outputTokens = usage["completion_tokens"] as? Int ?? outputTokens
+                }
             case .gemini:
                 if let candidates = json["candidates"] as? [[String: Any]],
                    let content = candidates.first?["content"] as? [String: Any],
                    let parts = content["parts"] as? [[String: Any]],
-                   let text = parts.first?["text"] as? String {
-                    chunks.append(text)
+                   let t = parts.first?["text"] as? String {
+                    chunks.append(t)
+                }
+                // usageMetadata は累積値なので最後のものを使用
+                if let meta = json["usageMetadata"] as? [String: Any] {
+                    inputTokens = meta["promptTokenCount"] as? Int ?? inputTokens
+                    outputTokens = meta["candidatesTokenCount"] as? Int ?? outputTokens
                 }
             }
         }
-        return chunks
+        return (chunks, inputTokens, outputTokens)
     }
 }
 

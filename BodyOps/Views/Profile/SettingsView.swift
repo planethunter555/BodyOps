@@ -8,6 +8,8 @@ struct SettingsView: View {
     @Query private var notificationSettings: [NotificationSetting]
     @Query(filter: #Predicate<Exercise> { !$0.isPreset }, sort: \Exercise.name)
     private var customExercises: [Exercise]
+    @Query(sort: \APIUsageRecord.recordedAt, order: .reverse)
+    private var allUsageRecords: [APIUsageRecord]
 
     @State private var height: String = ""
     @State private var weight: String = ""
@@ -25,6 +27,9 @@ struct SettingsView: View {
     @State private var connectionTestResult: String = ""
     @State private var isTestingConnection = false
 
+    @State private var availableModels: [String] = []
+    @State private var isFetchingModels = false
+
     @State private var notificationsEnabled = false
     @State private var selectedWeekdays: Set<Int> = []
     @State private var notificationTime: Date = Calendar.current.date(
@@ -41,6 +46,7 @@ struct SettingsView: View {
                 profileSection
                 goalSection
                 llmSection
+                apiCostSection
                 promptSection
                 notificationSection
                 customExerciseSection
@@ -137,15 +143,19 @@ struct SettingsView: View {
                 }
             }
             .onChange(of: selectedProvider) { _, newProvider in
-                modelName = newProvider.defaultModel
+                availableModels = ModelListService.shared.cachedModels(for: newProvider)
+                modelName = availableModels.first ?? newProvider.defaultModel
                 apiKeyInput = KeychainService.shared.load(forProvider: newProvider) ?? ""
             }
 
             Picker("モデル", selection: $modelName) {
-                ForEach(selectedProvider.models, id: \.self) { model in
+                ForEach(availableModels, id: \.self) { model in
                     Text(model).tag(model)
                 }
             }
+            .disabled(availableModels.isEmpty)
+
+            modelRefreshRow
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("APIキー")
@@ -175,6 +185,91 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(connectionTestResult.contains("成功") ? .green : .red)
             }
+        }
+    }
+
+    private var modelRefreshRow: some View {
+        HStack {
+            if let date = ModelListService.shared.lastFetchDate(for: selectedProvider) {
+                Text("更新: \(date, format: .dateTime.month().day())")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            } else {
+                Text("モデル一覧未取得")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer()
+            Button {
+                Task { await refreshModels() }
+            } label: {
+                if isFetchingModels {
+                    ProgressView().scaleEffect(0.7)
+                } else {
+                    Label("更新", systemImage: "arrow.clockwise")
+                        .font(.caption)
+                }
+            }
+            .disabled(isFetchingModels || apiKeyInput.isEmpty)
+        }
+    }
+
+    private var apiCostSection: some View {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let thisMonthRecords = allUsageRecords.filter { $0.recordedAt >= startOfMonth }
+        let totalCost = thisMonthRecords.reduce(0) { $0 + $1.costUSD }
+
+        // Group by day (yyyy-MM-dd)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "yyyy-MM-dd"
+        var byDay: [(day: String, label: String, cost: Double, calls: Int)] = []
+        var seen: [String: Int] = [:]
+        for record in thisMonthRecords {
+            let key = dayFormatter.string(from: record.recordedAt)
+            if let idx = seen[key] {
+                byDay[idx] = (day: key, label: byDay[idx].label, cost: byDay[idx].cost + record.costUSD, calls: byDay[idx].calls + 1)
+            } else {
+                seen[key] = byDay.count
+                byDay.append((day: key, label: formatter.string(from: record.recordedAt), cost: record.costUSD, calls: 1))
+            }
+        }
+
+        return Section {
+            if thisMonthRecords.isEmpty {
+                Text("今月のAPI使用はありません")
+                    .foregroundStyle(.secondary)
+                    .font(.subheadline)
+            } else {
+                HStack {
+                    Text("今月の合計")
+                        .font(.subheadline)
+                    Spacer()
+                    Text(String(format: "$%.4f", totalCost))
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(totalCost > 1.0 ? .orange : .primary)
+                }
+                ForEach(byDay.prefix(10), id: \.day) { entry in
+                    HStack {
+                        Text(entry.label)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("\(entry.calls)回")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(String(format: "$%.4f", entry.cost))
+                            .font(.caption.monospacedDigit())
+                    }
+                }
+            }
+        } header: {
+            Text("API使用料金（今月）")
+        } footer: {
+            Text("概算値です。実際の料金はプロバイダーのダッシュボードで確認してください。")
         }
     }
 
@@ -272,10 +367,19 @@ struct SettingsView: View {
         }
         if let setting = currentLLMSetting {
             selectedProvider = setting.provider
-            let validModels = setting.provider.models
-            modelName = validModels.contains(setting.modelName) ? setting.modelName : setting.provider.defaultModel
+        }
+        // キャッシュからモデル一覧を即時ロード
+        availableModels = ModelListService.shared.cachedModels(for: selectedProvider)
+        if let setting = currentLLMSetting {
+            modelName = availableModels.contains(setting.modelName)
+                ? setting.modelName
+                : (availableModels.first ?? selectedProvider.defaultModel)
         }
         apiKeyInput = KeychainService.shared.load(forProvider: selectedProvider) ?? ""
+        // キャッシュが古い場合、APIキーがあれば自動でバックグラウンド更新
+        if !ModelListService.shared.isCacheFresh(for: selectedProvider) && !apiKeyInput.isEmpty {
+            Task { await refreshModels() }
+        }
         if let notifSetting = notificationSettings.first {
             notificationsEnabled = notifSetting.isEnabled
             selectedWeekdays = Set(notifSetting.weekdays)
@@ -286,6 +390,18 @@ struct SettingsView: View {
                 of: Date()
             ) ?? notificationTime
         }
+    }
+
+    @MainActor
+    private func refreshModels() async {
+        isFetchingModels = true
+        let key = apiKeyInput.isEmpty ? (KeychainService.shared.load(forProvider: selectedProvider) ?? "") : apiKeyInput
+        let fetched = await ModelListService.shared.fetchModelsIgnoringCache(for: selectedProvider, apiKey: key)
+        availableModels = fetched
+        if !availableModels.contains(modelName) {
+            modelName = availableModels.first ?? selectedProvider.defaultModel
+        }
+        isFetchingModels = false
     }
 
     private func saveApiKey() {

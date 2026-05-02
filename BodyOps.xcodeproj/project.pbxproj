@@ -7,19 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00CF8BED6AE84460B9F2375E /* SystemPromptBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92F9628AF7E7438E9241F282 /* SystemPromptBuilderTests.swift */; };
 		0787761CE9DD46121F7DF8A3 /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD935686F580D50455530119 /* NotificationServiceTests.swift */; };
 		07BB70330042288BB05AAE80 /* ExercisePresetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */; };
-		3DE6D5BF666149A583B513A8 /* SystemPromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F43DFD67FE4C4E818D6BE6 /* SystemPromptBuilder.swift */; };
-		00CF8BED6AE84460B9F2375E /* SystemPromptBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92F9628AF7E7438E9241F282 /* SystemPromptBuilderTests.swift */; };
 		08CEBD7A5613D06931361D08 /* ImageCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05114FB97BFE953DB1E69375 /* ImageCompressor.swift */; };
 		0A48AAD7F6825C96FDE772FD /* NotificationSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9DED9FA2F5DDA0EA12822 /* NotificationSetting.swift */; };
 		0D489E4CAD3C42D53222D2C3 /* LLMAPIServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 773CE6629CF7CBB5B29CFF51 /* LLMAPIServiceTests.swift */; };
 		138406F3A9821EE2B17CBC42 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17175B8BE749EB90DD6367B /* ChatMessage.swift */; };
 		1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122D8B90907DED0A4F6BF160 /* ContentView.swift */; };
+		1A2B3C4D5E6F7A8B9C0D1E2F /* APIUsageRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3B4C5D6E7F8A9B0C1D2E3F /* APIUsageRecord.swift */; };
 		1B3800E8372352B996171DD3 /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0441871ABDC563C063788A35 /* KeychainServiceTests.swift */; };
 		30E05F1C76E0413B19C9C94E /* WorkoutRecordSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B706303810A7484460133DE2 /* WorkoutRecordSheet.swift */; };
 		337CA0F28A72B51009E6384A /* WorkoutCSVImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB60D85E503124A0A7C3CF4 /* WorkoutCSVImporter.swift */; };
 		3C7A2ED4318D546943B09AA1 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3278A5B6D3F0FE5248639FE /* HistoryView.swift */; };
+		3DE6D5BF666149A583B513A8 /* SystemPromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F43DFD67FE4C4E818D6BE6 /* SystemPromptBuilder.swift */; };
 		3EE86521941C8DAC93E56F00 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF56C072AF9DB26469C43DD /* Exercise.swift */; };
 		578338BF24C0E45141AB6EFA /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */; };
 		5954ECE988918992693AA9A9 /* BodyOpsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */; };
@@ -39,6 +40,7 @@
 		B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */; };
 		B33F478B48860B8D4929F8F0 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969EE67BEF13E3A27354F67C /* ChatViewModel.swift */; };
 		BC4D2FB541311721613F11A6 /* AIChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6451B0CCE57B07A233CB3129 /* AIChatView.swift */; };
+		C765BCC22F8B8A7C00760DE5 /* ModelListService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C765BCC12F8B8A7C00760DE5 /* ModelListService.swift */; };
 		D661C11BCE186BC04DBA15B4 /* WorkoutSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */; };
 		DD5EC52BBFB777BDBBCF6BB1 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E17AE53BB96EDBB462936E2F /* UserProfile.swift */; };
 		E00BDC51C487CFCB319944DF /* CSVImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C6451A38BF9E836AD8A25D8 /* CSVImportSheet.swift */; };
@@ -62,9 +64,11 @@
 		05114FB97BFE953DB1E69375 /* ImageCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCompressor.swift; sourceTree = "<group>"; };
 		07759C9F6ACCE257531C659F /* BodyOpsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsApp.swift; sourceTree = "<group>"; };
 		122D8B90907DED0A4F6BF160 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		15F43DFD67FE4C4E818D6BE6 /* SystemPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPromptBuilder.swift; sourceTree = "<group>"; };
 		1629F4A039635E3B58BFF04C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
 		25BCC8D85B066F0248D6D6BF /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		2A3B4C5D6E7F8A9B0C1D2E3F /* APIUsageRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIUsageRecord.swift; sourceTree = "<group>"; };
 		2AB60D85E503124A0A7C3CF4 /* WorkoutCSVImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCSVImporter.swift; sourceTree = "<group>"; };
 		2F31D880250E0ADFD8D6D675 /* BodyOps.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BodyOps.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3069A86FDD6499591A73D469 /* ExercisePresetServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePresetServiceTests.swift; sourceTree = "<group>"; };
@@ -77,6 +81,7 @@
 		6451B0CCE57B07A233CB3129 /* AIChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatView.swift; sourceTree = "<group>"; };
 		773CE6629CF7CBB5B29CFF51 /* LLMAPIServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMAPIServiceTests.swift; sourceTree = "<group>"; };
 		79A47EE7383986121FCEEB50 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		92F9628AF7E7438E9241F282 /* SystemPromptBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPromptBuilderTests.swift; sourceTree = "<group>"; };
 		969EE67BEF13E3A27354F67C /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsTests.swift; sourceTree = "<group>"; };
 		9E80047211137045E464CF5E /* BodyOps.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BodyOps.entitlements; sourceTree = "<group>"; };
@@ -86,6 +91,7 @@
 		B2971A25301560B81024EEE3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B706303810A7484460133DE2 /* WorkoutRecordSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutRecordSheet.swift; sourceTree = "<group>"; };
 		C30A0B031BF2AE537623017C /* LLMAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMAPIService.swift; sourceTree = "<group>"; };
+		C765BCC12F8B8A7C00760DE5 /* ModelListService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelListService.swift; sourceTree = "<group>"; };
 		D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSetting.swift; sourceTree = "<group>"; };
 		D80AE13CA86E0212DD1FB759 /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSession.swift; sourceTree = "<group>"; };
@@ -97,8 +103,6 @@
 		F17175B8BE749EB90DD6367B /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		F30AF7DEF61D74A9196793E9 /* WorkoutCopyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCopyService.swift; sourceTree = "<group>"; };
 		F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePresetService.swift; sourceTree = "<group>"; };
-		15F43DFD67FE4C4E818D6BE6 /* SystemPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPromptBuilder.swift; sourceTree = "<group>"; };
-		92F9628AF7E7438E9241F282 /* SystemPromptBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPromptBuilderTests.swift; sourceTree = "<group>"; };
 		FC49742C68987B746BB11F0C /* MealRecordSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealRecordSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -128,6 +132,7 @@
 		31FF3F6DDCE696D1A3C3A67B /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				C765BCC12F8B8A7C00760DE5 /* ModelListService.swift */,
 				F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */,
 				25BCC8D85B066F0248D6D6BF /* KeychainService.swift */,
 				C30A0B031BF2AE537623017C /* LLMAPIService.swift */,
@@ -236,6 +241,7 @@
 		CD462B6B0280A0041C890B24 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				2A3B4C5D6E7F8A9B0C1D2E3F /* APIUsageRecord.swift */,
 				F17175B8BE749EB90DD6367B /* ChatMessage.swift */,
 				4AF56C072AF9DB26469C43DD /* Exercise.swift */,
 				D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */,
@@ -368,6 +374,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A2B3C4D5E6F7A8B9C0D1E2F /* APIUsageRecord.swift in Sources */,
 				BC4D2FB541311721613F11A6 /* AIChatView.swift in Sources */,
 				EA4B83BBD406ECB1204F1549 /* BodyOpsApp.swift in Sources */,
 				E00BDC51C487CFCB319944DF /* CSVImportSheet.swift in Sources */,
@@ -382,6 +389,7 @@
 				3C7A2ED4318D546943B09AA1 /* HistoryView.swift in Sources */,
 				08CEBD7A5613D06931361D08 /* ImageCompressor.swift in Sources */,
 				AE4A7D1830E634D56900F9D7 /* KeychainService.swift in Sources */,
+				C765BCC22F8B8A7C00760DE5 /* ModelListService.swift in Sources */,
 				63211D5E371BE96A68E9E670 /* LLMAPIService.swift in Sources */,
 				B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */,
 				E1AC319B883FEC7E4383DFDD /* MealRecord.swift in Sources */,

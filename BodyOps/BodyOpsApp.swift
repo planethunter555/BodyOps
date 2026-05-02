@@ -12,7 +12,8 @@ struct BodyOpsApp: App {
             ChatMessage.self,
             MealRecord.self,
             NotificationSetting.self,
-            LLMSetting.self
+            LLMSetting.self,
+            APIUsageRecord.self
         ])
         // swiftlint:disable:next force_try
         return try! ModelContainer(for: schema)

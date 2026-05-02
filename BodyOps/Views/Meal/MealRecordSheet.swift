@@ -268,14 +268,23 @@ final class MealRecordViewModel {
 
         do {
             // stream: false の非ストリーミングリクエストで1回確実に取得する
-            let fullResponse = try await LLMAPIService().sendOnce(
+            let result = try await LLMAPIService().sendOnce(
                 messages: messages,
                 system: system,
                 provider: setting.provider,
                 apiKey: apiKey,
                 modelName: setting.modelName
             )
-            parseAndApply(response: fullResponse)
+            parseAndApply(response: result.text)
+            // API使用量を記録
+            let record = APIUsageRecord(
+                provider: setting.provider.rawValue,
+                modelName: setting.modelName,
+                inputTokens: result.inputTokens,
+                outputTokens: result.outputTokens
+            )
+            context.insert(record)
+            try? context.save()
         } catch {
             estimationError = "AI推定に失敗しました。手動で入力してください。"
         }

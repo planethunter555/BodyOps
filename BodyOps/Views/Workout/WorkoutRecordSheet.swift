@@ -316,6 +316,18 @@ struct WorkoutRecordSheet: View {
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
             }
+
+            if !isEditMode {
+                Button {
+                    saveExercise(entry.wrappedValue)
+                } label: {
+                    Label("この種目を保存", systemImage: "checkmark.circle.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .disabled(entry.wrappedValue.sets.isEmpty)
+                .buttonStyle(.borderedProminent)
+                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 8, trailing: 16))
+            }
         } header: {
             HStack {
                 Text(entry.wrappedValue.exercise.name)
@@ -375,6 +387,27 @@ struct WorkoutRecordSheet: View {
             }
             exercises.append(WorkoutExerciseEntry(exercise: exercise, sets: entries))
         }
+    }
+
+    private func saveExercise(_ entry: WorkoutExerciseEntry) {
+        let session = WorkoutSession(date: date, memo: sessionMemo)
+        var totalVolume = 0.0
+        for setEntry in entry.sets {
+            let workoutSet = WorkoutSet(
+                setNumber: setEntry.setNumber,
+                weight: setEntry.weight,
+                reps: setEntry.reps,
+                exercise: entry.exercise,
+                session: session
+            )
+            totalVolume += setEntry.volume
+            modelContext.insert(workoutSet)
+        }
+        session.totalVolume = totalVolume
+        modelContext.insert(session)
+        try? modelContext.save()
+        exercises.removeAll { $0.id == entry.id }
+        if exercises.isEmpty { dismiss() }
     }
 
     private func saveSession() {
@@ -528,7 +561,7 @@ struct SetInputRow: View {
 
                 // 重量
                 HStack(spacing: 6) {
-                    stepButton("minus") { stepWeight(-2.5) }
+                    stepButton("minus") { stepWeight(-1) }
                     VStack(spacing: 1) {
                         TextField("0", text: $weightText)
                             .keyboardType(.decimalPad)
@@ -542,7 +575,7 @@ struct SetInputRow: View {
                             }
                         Text("kg").font(.caption2).foregroundStyle(.secondary)
                     }
-                    stepButton("plus") { stepWeight(2.5) }
+                    stepButton("plus") { stepWeight(1) }
                 }
 
                 Spacer()

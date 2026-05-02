@@ -50,7 +50,7 @@ final class ChatViewModel {
         saveMessage(role: "user", content: text, imageData: imageData, context: context)
 
         // アシスタントのプレースホルダー
-        var assistantBubble = ChatBubbleItem(role: "assistant", content: "")
+        let assistantBubble = ChatBubbleItem(role: "assistant", content: "")
         messages.append(assistantBubble)
         let assistantIndex = messages.count - 1
 
@@ -61,12 +61,27 @@ final class ChatViewModel {
             let systemPrompt = buildSystemPrompt(context: context)
             let apiMessages = buildAPIMessages(currentText: text, imageData: imageData, context: context)
 
+            let providerRaw = setting.provider.rawValue
+            let modelNameCopy = setting.modelName
             let stream = llmService.sendMessage(
                 messages: apiMessages,
                 system: systemPrompt,
                 provider: setting.provider,
                 apiKey: apiKey,
-                modelName: setting.modelName
+                modelName: setting.modelName,
+                onUsage: { [weak self] inputTokens, outputTokens in
+                    Task { @MainActor [weak self] in
+                        guard let self, let ctx = self.context else { return }
+                        let record = APIUsageRecord(
+                            provider: providerRaw,
+                            modelName: modelNameCopy,
+                            inputTokens: inputTokens,
+                            outputTokens: outputTokens
+                        )
+                        ctx.insert(record)
+                        try? ctx.save()
+                    }
+                }
             )
 
             var fullResponse = ""
