@@ -370,7 +370,7 @@ struct WorkoutRecordSheet: View {
         var exerciseOrder: [UUID] = []
         var setsByExercise: [UUID: [WorkoutSet]] = [:]
 
-        for set in session.sets.sorted(by: { $0.setNumber < $1.setNumber }) {
+        for set in loadSets(for: session) {
             guard let exerciseId = set.exercise?.id else { continue }
             if setsByExercise[exerciseId] == nil {
                 setsByExercise[exerciseId] = []
@@ -413,7 +413,7 @@ struct WorkoutRecordSheet: View {
     private func saveSession() {
         if let session = editingSession {
             // 編集モード: 既存のセットを削除して再作成
-            for set in session.sets { modelContext.delete(set) }
+            for set in loadSets(for: session) { modelContext.delete(set) }
             session.memo = sessionMemo
             var totalVolume = 0.0
             for entry in exercises {

@@ -38,7 +38,7 @@ final class LLMAPIService: @unchecked Sendable {
         self.session = session
     }
 
-    func endpointURL(for provider: LLMProvider) -> URL {
+    func endpointURL(for provider: LLMProvider, modelName: String = "") -> URL {
         switch provider {
         case .claude:
             // swiftlint:disable:next force_unwrapping
@@ -47,7 +47,7 @@ final class LLMAPIService: @unchecked Sendable {
             // swiftlint:disable:next force_unwrapping
             return URL(string: "https://api.openai.com/v1/chat/completions")!
         case .gemini:
-            let model = "gemini-2.0-flash"
+            let model = modelName.isEmpty ? LLMProvider.gemini.defaultModel : modelName
             // swiftlint:disable:next force_unwrapping
             return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent")!
         }
@@ -64,7 +64,7 @@ final class LLMAPIService: @unchecked Sendable {
         AsyncThrowingStream { continuation in
             Task { @Sendable in
                 do {
-                    var request = URLRequest(url: endpointURL(for: provider))
+                    var request = URLRequest(url: endpointURL(for: provider, modelName: modelName))
                     request.httpMethod = "POST"
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                     applyAuthHeaders(to: &request, provider: provider, apiKey: apiKey)

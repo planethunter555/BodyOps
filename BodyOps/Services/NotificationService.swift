@@ -21,10 +21,19 @@ final class NotificationService {
     }
 
     func schedule(setting: NotificationSetting) async throws {
-        center.removeAllPendingNotificationRequests()
-        guard setting.isEnabled else { return }
+        try await scheduleWeekdays(
+            isEnabled: setting.isEnabled,
+            weekdays: setting.weekdays,
+            hour: setting.hour,
+            minute: setting.minute
+        )
+    }
 
-        for weekday in setting.weekdays {
+    func scheduleWeekdays(isEnabled: Bool, weekdays: [Int], hour: Int, minute: Int) async throws {
+        center.removeAllPendingNotificationRequests()
+        guard isEnabled else { return }
+
+        for weekday in weekdays {
             let content = UNMutableNotificationContent()
             content.title = "トレーニングリマインダー"
             content.body = "今日もトレーニングを頑張りましょう！"
@@ -32,8 +41,8 @@ final class NotificationService {
 
             var dateComponents = DateComponents()
             dateComponents.weekday = weekday
-            dateComponents.hour = setting.hour
-            dateComponents.minute = setting.minute
+            dateComponents.hour = hour
+            dateComponents.minute = minute
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
             let identifier = "bodyops.workout.reminder.weekday.\(weekday)"

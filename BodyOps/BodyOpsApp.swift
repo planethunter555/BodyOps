@@ -3,7 +3,10 @@ import SwiftData
 
 @main
 struct BodyOpsApp: App {
-    let container: ModelContainer = {
+    private let container: ModelContainer?
+    private let initError: String?
+
+    init() {
         let schema = Schema([
             UserProfile.self,
             Exercise.self,
@@ -15,19 +18,49 @@ struct BodyOpsApp: App {
             LLMSetting.self,
             APIUsageRecord.self
         ])
-        // swiftlint:disable:next force_try
-        return try! ModelContainer(for: schema)
-    }()
+        do {
+            container = try ModelContainer(for: schema)
+            initError = nil
+        } catch {
+            container = nil
+            initError = error.localizedDescription
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .onAppear {
-                    let context = container.mainContext
-                    let service = ExercisePresetService(context: context)
-                    try? service.seedIfNeeded()
-                }
+            if let c = container {
+                ContentView()
+                    .onAppear {
+                        let service = ExercisePresetService(context: c.mainContext)
+                        try? service.seedIfNeeded()
+                    }
+                    .modelContainer(c)
+            } else {
+                DataErrorView(message: initError ?? "不明なエラー")
+            }
         }
-        .modelContainer(container)
+    }
+}
+
+private struct DataErrorView: View {
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 60))
+                .foregroundStyle(.orange)
+            Text("データベースエラー")
+                .font(.title2.bold())
+            Text("アプリのデータを読み込めませんでした。アプリを再インストールしてください。")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(32)
     }
 }

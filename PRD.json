@@ -396,7 +396,7 @@
       "チャット送信・食事PFC推定のAPI呼び出しごとにトークン数とコストが記録される",
       "「料金は概算」であることの注釈が表示される"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "phase5-task25",
@@ -412,6 +412,59 @@
       "onAppear時にキャッシュを即時ロードし、キャッシュが古い（30日超）かつAPIキーがあればバックグラウンドで自動更新する",
       "プロバイダー切替時にそのプロバイダーのキャッシュを即反映する",
       "APIキー未入力時は「更新」ボタンをdisabledにする"
+    ],
+    "passes": true
+  },
+  {
+    "id": "phase6-task26",
+    "category": "service",
+    "description": "App Store公開前のクラッシュ・バグ修正（カメラ・Geminiモデル・SwiftData・保存エラー）",
+    "steps": [
+      "UIImagePickerController.isSourceTypeAvailable(.camera) チェックを追加し、非対応環境ではセグメントにカメラを表示せずフォールバックする",
+      "LLMAPIService.endpointURL(for:modelName:) がGeminiストリーミングURLにも選択モデルを反映する（従来は gemini-2.0-flash 固定）",
+      "BodyOpsApp のModelContainer初期化を try! から do/catch に変更し、失敗時はクラッシュせず DataErrorView（エラー画面）を表示する",
+      "WorkoutRecordSheet の編集モードで session.sets の lazy load を避け loadSets(for:) を使用する（loadSession・saveSession の delete 両箇所）",
+      "SettingsView の保存処理を do/catch に変更し、Keychain保存失敗・SwiftData保存失敗をそれぞれアラートで通知する（try? による握りつぶし廃止）",
+      "saveNotificationSetting を async 化して saveSettings が await し、通知許可拒否・スケジュール失敗を成功アラートより前に検出する",
+      "NotificationService.scheduleWeekdays(isEnabled:weekdays:hour:minute:) を追加し、SwiftData @Model を async 境界越しに渡さず値型を渡す（Swift 6 データレース解消）"
+    ],
+    "passes": true
+  },
+  {
+    "id": "phase6-task27",
+    "category": "service",
+    "description": "App Store申請要件対応（PrivacyInfo.xcprivacy・AI送信説明・iPhone専用・向き固定）",
+    "steps": [
+      "PrivacyInfo.xcprivacy を作成し、UserDefaults（NSPrivacyAccessedAPICategoryUserDefaults）を CA92.1 理由で申告する",
+      "PrivacyInfo.xcprivacy を Xcode プロジェクトの Resources Build Phase に追加し、ビルド後の BodyOps.app 内に同梱されることを確認する",
+      "AIチャットのウェルカム画面に「入力内容・添付画像・プロフィール・目標・直近の筋トレ/食事記録を選択中のAIプロバイダーへ送信します」の説明文を表示する",
+      "設定タブの AIプロバイダーセクション footer に同趣旨の説明を表示する",
+      "TARGETED_DEVICE_FAMILY を "1,2"（iPhone+iPad）から "1"（iPhone専用）に変更し、縦向き固定のままApp Store Validation警告を解消する"
+    ],
+    "passes": true
+  },
+  {
+    "id": "phase6-task28",
+    "category": "ui",
+    "description": "履歴UI改善（食事カレンダードット・過去日食事追加・食事レコード編集）",
+    "steps": [
+      "履歴カレンダーのドットを筋トレ（アクセントカラー）と食事（オレンジ）の2色で独立表示する",
+      "日別詳細に「食事を記録する」ボタンを追加し、過去日の食事を MealRecordSheet から追加できる",
+      "MealRecordSheet に editingMeal: MealRecord? パラメータを追加し、非nil時は既存レコードを更新する編集モードで動作する（食事タイプ・説明・写真・PFC全フィールドを更新可能）",
+      "編集モードでは AI推定セクションを非表示にし、ナビゲーションタイトルを「食事を編集」とする",
+      "履歴の食事カードヘッダーに鉛筆アイコンボタン（pencil.circle）を追加し、タップで編集シートを開く"
+    ],
+    "passes": true
+  },
+  {
+    "id": "phase6-task29",
+    "category": "service",
+    "description": "写真読み込みのメモリ最適化v2（ImageIO downsampling）",
+    "steps": [
+      "ImageCompressor を UIImage(data:) でフル解像度展開する方式から ImageIO の kCGImageSourceThumbnailMaxPixelSize を使ったdownsamplingに刷新し、読み込み時点から最大800pxに縮小する",
+      "MealRecordSheet のカメラ・ライブラリ選択時に jpegData(compressionQuality:1.0) でフル解像度データを一時生成する処理をなくし、縮小 JPEG を直接生成する",
+      "高解像度写真（4K等）を選択してもメモリスパイクが発生しない",
+      "xcodebuild build 成功・xcodebuild build-for-testing 成功"
     ],
     "passes": true
   }

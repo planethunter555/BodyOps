@@ -36,6 +36,7 @@ struct SettingsView: View {
         bySettingHour: 20, minute: 0, second: 0, of: Date()
     ) ?? Date()
     @State private var showSaveAlert = false
+    @State private var saveError: String?
 
     var currentProfile: UserProfile? { profiles.first }
     var currentLLMSetting: LLMSetting? { llmSettings.first }
@@ -62,12 +63,17 @@ struct SettingsView: View {
                             #selector(UIResponder.resignFirstResponder),
                             to: nil, from: nil, for: nil
                         )
-                        saveSettings()
+                        Task { await saveSettings() }
                     }
                 }
             }
             .alert("保存しました", isPresented: $showSaveAlert) {
                 Button("OK") {}
+            }
+            .alert("保存エラー", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+                Button("OK") { saveError = nil }
+            } message: {
+                Text(saveError ?? "")
             }
         }
     }
@@ -136,7 +142,7 @@ struct SettingsView: View {
     }
 
     private var llmSection: some View {
-        Section("AIプロバイダー") {
+        Section {
             Picker("プロバイダー", selection: $selectedProvider) {
                 ForEach(LLMProvider.allCases, id: \.self) { provider in
                     Text(provider.displayName).tag(provider)
@@ -167,7 +173,7 @@ struct SettingsView: View {
             }
 
             Button {
-                saveApiKey()
+                try? KeychainService.shared.save(apiKey: apiKeyInput, forProvider: selectedProvider)
                 Task { await testConnection() }
             } label: {
                 HStack {
@@ -185,6 +191,10 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(connectionTestResult.contains("成功") ? .green : .red)
             }
+        } header: {
+            Text("AIプロバイダー")
+        } footer: {
+            Text("チャット時は入力内容・添付画像・プロフィール・目標・直近の筋トレ/食事記録を選択中のプロバイダーへ送信します。")
         }
     }
 
@@ -404,10 +414,6 @@ struct SettingsView: View {
         isFetchingModels = false
     }
 
-    private func saveApiKey() {
-        try? KeychainService.shared.save(apiKey: apiKeyInput, forProvider: selectedProvider)
-    }
-
     private func testConnection() async {
         guard !apiKeyInput.isEmpty else {
             connectionTestResult = "❌ APIキーが入力されていません"
@@ -442,7 +448,7 @@ struct SettingsView: View {
         isTestingConnection = false
     }
 
-    private func saveSettings() {
+    private func saveSettings() async {
         let profile: UserProfile
         if let existing = currentProfile {
             profile = existing
@@ -471,14 +477,25 @@ struct SettingsView: View {
         llmSetting.modelName = modelName.isEmpty ? selectedProvider.defaultModel : modelName
         llmSetting.apiKey = selectedProvider.rawValue
 
-        saveApiKey()
-        saveNotificationSetting()
+        do {
+            try KeychainService.shared.save(apiKey: apiKeyInput, forProvider: selectedProvider)
+        } catch {
+            saveError = "APIキーの保存に失敗しました"
+            return
+        }
 
-        try? modelContext.save()
-        showSaveAlert = true
+        await saveNotificationSetting()
+        guard saveError == nil else { return }
+
+        do {
+            try modelContext.save()
+            showSaveAlert = true
+        } catch {
+            saveError = "設定の保存に失敗しました"
+        }
     }
 
-    private func saveNotificationSetting() {
+    private func saveNotificationSetting() async {
         let notifSetting: NotificationSetting
         if let existing = notificationSettings.first {
             notifSetting = existing
@@ -491,12 +508,25 @@ struct SettingsView: View {
         notifSetting.weekdays = Array(selectedWeekdays)
         notifSetting.hour = components.hour ?? 20
         notifSetting.minute = components.minute ?? 0
-        Task {
-            let service = NotificationService()
-            if notificationsEnabled {
-                _ = try? await service.requestAuthorization()
+
+        // Extract value types before async boundary (Swift 6 concurrency)
+        let isEnabled = notifSetting.isEnabled
+        let weekdays = notifSetting.weekdays
+        let hour = notifSetting.hour
+        let minute = notifSetting.minute
+
+        let service = NotificationService()
+        if isEnabled {
+            let granted = (try? await service.requestAuthorization()) ?? false
+            if !granted {
+                saveError = "通知が許可されていません。設定アプリ → BodyOps → 通知 で許可してください。"
+                return
             }
-            try? await service.schedule(setting: notifSetting)
+        }
+        do {
+            try await service.scheduleWeekdays(isEnabled: isEnabled, weekdays: weekdays, hour: hour, minute: minute)
+        } catch {
+            saveError = "通知のスケジュール設定に失敗しました"
         }
     }
 

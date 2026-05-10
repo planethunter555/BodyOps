@@ -31,3 +31,4 @@ build/
 *.env
 Secrets.swift
 APIKeys.swift
+xcuserdata/

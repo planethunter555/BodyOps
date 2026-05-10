@@ -14,6 +14,8 @@ struct HistoryView: View {
     @State private var showCSVImport = false
     @State private var editingSession: WorkoutSession?
     @State private var showWorkoutSheet = false
+    @State private var showMealSheet = false
+    @State private var editingMeal: MealRecord?
     @State private var deletingSession: WorkoutSession?
     @State private var deletingMeal: MealRecord?
 
@@ -62,6 +64,14 @@ struct HistoryView: View {
                 if let date = selectedDate {
                     WorkoutRecordSheet(date: date)
                 }
+            }
+            .sheet(isPresented: $showMealSheet) {
+                if let date = selectedDate {
+                    MealRecordSheet(date: date)
+                }
+            }
+            .sheet(item: $editingMeal) { meal in
+                MealRecordSheet(date: meal.recordedAt, editingMeal: meal)
             }
             .alert("筋トレ記録を削除", isPresented: Binding(
                 get: { deletingSession != nil },
@@ -143,6 +153,7 @@ struct HistoryView: View {
 
     private func dayCell(for date: Date) -> some View {
         let hasWorkout = sessionsForDate(date).isEmpty == false
+        let hasMeal = mealsForDate(date).isEmpty == false
         let isSelected = selectedDate.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false
         let isToday = Calendar.current.isDateInToday(date)
         return Button {
@@ -157,10 +168,17 @@ struct HistoryView: View {
                     Text("\(Calendar.current.component(.day, from: date))")
                         .font(.caption)
                         .foregroundStyle(isSelected ? .white : .primary)
-                    if hasWorkout {
-                        Circle()
-                            .fill(isSelected ? Color.white : Color.accentColor)
-                            .frame(width: 4, height: 4)
+                    HStack(spacing: 3) {
+                        if hasWorkout {
+                            Circle()
+                                .fill(isSelected ? Color.white : Color.accentColor)
+                                .frame(width: 4, height: 4)
+                        }
+                        if hasMeal {
+                            Circle()
+                                .fill(isSelected ? Color.white : Color.orange)
+                                .frame(width: 4, height: 4)
+                        }
                     }
                 }
             }
@@ -198,6 +216,15 @@ struct HistoryView: View {
                         .padding(.vertical, 6)
                 }
                 .buttonStyle(.borderedProminent)
+
+                Button {
+                    showMealSheet = true
+                } label: {
+                    Label("食事を記録する", systemImage: "fork.knife.circle.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(.bordered)
             }
         }
         .padding()
@@ -276,6 +303,13 @@ struct HistoryView: View {
                 Text("\(Int(meal.calories)) kcal")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Button {
+                    editingMeal = meal
+                } label: {
+                    Image(systemName: "pencil.circle")
+                        .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
                 Button {
                     deletingMeal = meal
                 } label: {

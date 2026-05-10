@@ -43,9 +43,12 @@ struct MealRecordSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     let date: Date
+    var editingMeal: MealRecord? = nil
 
     @State private var viewModel = MealRecordViewModel()
     @State private var showPhotoSourceSheet = false
+
+    private var isEditMode: Bool { editingMeal != nil }
 
     var body: some View {
         NavigationStack {
@@ -53,18 +56,27 @@ struct MealRecordSheet: View {
                 mealTypeSection
                 descriptionSection
                 photoSection
-                estimationSection
+                if !isEditMode { estimationSection }
                 pfcSection
             }
-            .navigationTitle("食事記録")
+            .navigationTitle(isEditMode ? "食事を編集" : "食事記録")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                if let meal = editingMeal {
+                    viewModel.load(from: meal)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button("保存") {
-                        viewModel.save(date: date, context: modelContext)
+                        if let meal = editingMeal {
+                            viewModel.update(meal: meal, context: modelContext)
+                        } else {
+                            viewModel.save(date: date, context: modelContext)
+                        }
                         dismiss()
                     }
                     .disabled(!viewModel.canSave)
@@ -290,6 +302,27 @@ final class MealRecordViewModel {
         }
     }
 
+    func load(from meal: MealRecord) {
+        mealDescription = meal.mealDescription
+        mealType = meal.mealType
+        imageData = meal.imageData
+        calories = meal.calories
+        protein = meal.protein
+        fat = meal.fat
+        carbs = meal.carbs
+    }
+
+    func update(meal: MealRecord, context: ModelContext) {
+        meal.mealDescription = mealDescription
+        meal.mealType = mealType
+        meal.imageData = imageData
+        meal.calories = calories
+        meal.protein = protein
+        meal.fat = fat
+        meal.carbs = carbs
+        try? context.save()
+    }
+
     func save(date: Date, context: ModelContext) {
         let record = MealRecord(
             mealDescription: mealDescription,
@@ -417,8 +450,8 @@ private struct PhotoSourceSheet: View {
         if showingCamera {
             // カメラ全画面。撮影 or キャンセルでシートが閉じる
             CameraPickerView { image in
-                if let data = image.jpegData(compressionQuality: 1.0) {
-                    onImagePicked(ImageCompressor.compress(data))
+                if let data = ImageCompressor.compress(image) {
+                    onImagePicked(data)
                 }
             }
             .ignoresSafeArea()
@@ -426,7 +459,7 @@ private struct PhotoSourceSheet: View {
             // ライブラリ。ナビバーにトグル付き
             PhotoLibraryPicker(
                 onPick: { jpeg in
-                    onImagePicked(ImageCompressor.compress(jpeg))
+                    onImagePicked(jpeg)
                     dismiss()
                 },
                 onCancel: { dismiss() },
@@ -452,7 +485,8 @@ private struct PhotoLibraryPicker: UIViewControllerRepresentable {
         picker.delegate = context.coordinator
 
         // ナビバーのタイトル部分にライブラリ｜カメラのトグルを配置
-        let seg = UISegmentedControl(items: ["ライブラリ", "カメラ"])
+        let cameraAvailable = UIImagePickerController.isSourceTypeAvailable(.camera)
+        let seg = UISegmentedControl(items: cameraAvailable ? ["ライブラリ", "カメラ"] : ["ライブラリ"])
         seg.selectedSegmentIndex = 0
         seg.addTarget(
             context.coordinator,
@@ -487,7 +521,7 @@ private struct PhotoLibraryPicker: UIViewControllerRepresentable {
             let onPick = parent.onPick
             result.itemProvider.loadObject(ofClass: UIImage.self) { object, _ in
                 guard let image = object as? UIImage,
-                      let jpeg = image.jpegData(compressionQuality: 1.0) else { return }
+                      let jpeg = ImageCompressor.compress(image) else { return }
                 DispatchQueue.main.async { onPick(jpeg) }
             }
         }
@@ -504,7 +538,7 @@ struct CameraPickerView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.sourceType = .camera
+        picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
         picker.delegate = context.coordinator
         return picker
     }

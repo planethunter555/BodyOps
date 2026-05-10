@@ -104,6 +104,12 @@ struct AIChatView: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .padding(.top, 4)
+            Text("入力内容・添付画像・プロフィール・目標・直近の筋トレ/食事記録を、設定中のAIプロバイダーへ送信します。")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+                .padding(.top, 2)
         }
         .padding(.bottom, 16)
     }
