@@ -16,6 +16,7 @@
 		138406F3A9821EE2B17CBC42 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17175B8BE749EB90DD6367B /* ChatMessage.swift */; };
 		1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122D8B90907DED0A4F6BF160 /* ContentView.swift */; };
 		1A2B3C4D5E6F7A8B9C0D1E2F /* APIUsageRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3B4C5D6E7F8A9B0C1D2E3F /* APIUsageRecord.swift */; };
+		1D8B7034A90E4D1A9B3F2C11 /* AIPrivacyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8B7033A90E4D1A9B3F2C11 /* AIPrivacyViews.swift */; };
 		1B3800E8372352B996171DD3 /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0441871ABDC563C063788A35 /* KeychainServiceTests.swift */; };
 		30E05F1C76E0413B19C9C94E /* WorkoutRecordSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B706303810A7484460133DE2 /* WorkoutRecordSheet.swift */; };
 		337CA0F28A72B51009E6384A /* WorkoutCSVImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB60D85E503124A0A7C3CF4 /* WorkoutCSVImporter.swift */; };
@@ -69,6 +70,7 @@
 		15F43DFD67FE4C4E818D6BE6 /* SystemPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPromptBuilder.swift; sourceTree = "<group>"; };
 		1629F4A039635E3B58BFF04C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
+		1D8B7033A90E4D1A9B3F2C11 /* AIPrivacyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPrivacyViews.swift; sourceTree = "<group>"; };
 		25BCC8D85B066F0248D6D6BF /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		2A3B4C5D6E7F8A9B0C1D2E3F /* APIUsageRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIUsageRecord.swift; sourceTree = "<group>"; };
 		2AB60D85E503124A0A7C3CF4 /* WorkoutCSVImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCSVImporter.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				99891DC524F76D555F19EB9E /* Chat */,
+				1D8B7032A90E4D1A9B3F2C11 /* Components */,
 				7C9E6C7A04CAC88EECF3F0FD /* History */,
 				9004F8168F8C3D796FEA77E3 /* Meal */,
 				8FEEAD0322208F50B523A847 /* Profile */,
@@ -131,6 +134,14 @@
 				05114FB97BFE953DB1E69375 /* ImageCompressor.swift */,
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		1D8B7032A90E4D1A9B3F2C11 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				1D8B7033A90E4D1A9B3F2C11 /* AIPrivacyViews.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		31FF3F6DDCE696D1A3C3A67B /* Services */ = {
@@ -383,6 +394,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A2B3C4D5E6F7A8B9C0D1E2F /* APIUsageRecord.swift in Sources */,
+				1D8B7034A90E4D1A9B3F2C11 /* AIPrivacyViews.swift in Sources */,
 				BC4D2FB541311721613F11A6 /* AIChatView.swift in Sources */,
 				EA4B83BBD406ECB1204F1549 /* BodyOpsApp.swift in Sources */,
 				E00BDC51C487CFCB319944DF /* CSVImportSheet.swift in Sources */,

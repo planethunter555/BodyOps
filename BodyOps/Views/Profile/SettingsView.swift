@@ -37,6 +37,7 @@ struct SettingsView: View {
     ) ?? Date()
     @State private var showSaveAlert = false
     @State private var saveError: String?
+    @AppStorage(AIConsentStorage.key) private var hasAIConsent = false
 
     var currentProfile: UserProfile? { profiles.first }
     var currentLLMSetting: LLMSetting? { llmSettings.first }
@@ -47,6 +48,7 @@ struct SettingsView: View {
                 profileSection
                 goalSection
                 llmSection
+                aiPrivacySection
                 apiCostSection
                 promptSection
                 notificationSection
@@ -221,6 +223,38 @@ struct SettingsView: View {
                 }
             }
             .disabled(isFetchingModels || apiKeyInput.isEmpty)
+        }
+    }
+
+    private var aiPrivacySection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("AIデータ送信", systemImage: "lock.shield")
+                    .font(.subheadline.bold())
+                Text("AIチャットや食事AI推定では、入力内容・添付画像・プロフィール・目標・制約・直近の筋トレ/食事記録を、選択中のAIプロバイダーへ送信する場合があります。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("送信先: \(selectedProvider.displayName)")
+                    .font(.caption)
+                Text("APIキーは端末内のiOS Keychainに保存され、開発者のサーバーには保存されません。AI同意を取り消しても、通常の記録機能は利用できます。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            HStack {
+                Text("AI送信への同意")
+                Spacer()
+                Text(hasAIConsent ? "同意済み" : "未同意")
+                    .foregroundStyle(hasAIConsent ? .green : .secondary)
+            }
+            if hasAIConsent {
+                Button(role: .destructive) {
+                    hasAIConsent = false
+                } label: {
+                    Text("同意を取り消す")
+                }
+            }
+        } header: {
+            Text("AIデータ送信とプライバシー")
         }
     }
 

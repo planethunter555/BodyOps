@@ -16,17 +16,45 @@ enum LLMProvider: String, CaseIterable, Codable {
 
     var defaultModel: String {
         switch self {
-        case .claude: return "claude-sonnet-4-6"
-        case .openai: return "gpt-4o"
-        case .gemini: return "gemini-2.0-flash"
+        case .claude: return "claude-sonnet-4-5-20250929"
+        case .openai: return "gpt-5-mini"
+        case .gemini: return "gemini-2.5-flash"
         }
     }
 
     var models: [String] {
         switch self {
-        case .claude: return ["claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5-20251001"]
-        case .openai: return ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]
-        case .gemini: return ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"]
+        case .claude:
+            return [
+                "claude-sonnet-4-5-20250929",
+                "claude-haiku-4-5-20251001",
+                "claude-opus-4-1-20250805",
+                "claude-opus-4-20250514",
+                "claude-sonnet-4-20250514",
+                "claude-3-7-sonnet-20250219",
+                "claude-3-5-sonnet-20241022",
+                "claude-3-5-haiku-20241022"
+            ]
+        case .openai:
+            return [
+                "gpt-5.2-chat-latest",
+                "gpt-5.1-chat-latest",
+                "gpt-5-chat-latest",
+                "gpt-5",
+                "gpt-5-mini",
+                "gpt-4.1",
+                "gpt-4.1-mini",
+                "gpt-4o",
+                "gpt-4o-mini"
+            ]
+        case .gemini:
+            return [
+                "gemini-2.5-flash",
+                "gemini-2.5-flash-lite",
+                "gemini-2.5-pro",
+                "gemini-2.0-flash",
+                "gemini-2.0-flash-lite"
+            ]
         }
     }
 }

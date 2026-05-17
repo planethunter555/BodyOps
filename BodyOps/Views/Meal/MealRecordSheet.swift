@@ -47,6 +47,8 @@ struct MealRecordSheet: View {
 
     @State private var viewModel = MealRecordViewModel()
     @State private var showPhotoSourceSheet = false
+    @State private var showAIConsent = false
+    @AppStorage(AIConsentStorage.key) private var hasAIConsent = false
 
     private var isEditMode: Bool { editingMeal != nil }
 
@@ -85,6 +87,15 @@ struct MealRecordSheet: View {
             .sheet(isPresented: $showPhotoSourceSheet) {
                 PhotoSourceSheet { data in
                     viewModel.imageData = data
+                }
+            }
+            .sheet(isPresented: $showAIConsent) {
+                AIConsentSheet(providerName: viewModel.currentProviderDescription(context: modelContext)) {
+                    hasAIConsent = true
+                    showAIConsent = false
+                    Task { await viewModel.estimatePFC(context: modelContext) }
+                } onCancel: {
+                    showAIConsent = false
                 }
             }
         }
@@ -143,7 +154,11 @@ struct MealRecordSheet: View {
     private var estimationSection: some View {
         Section {
             Button {
-                Task { await viewModel.estimatePFC(context: modelContext) }
+                if hasAIConsent {
+                    Task { await viewModel.estimatePFC(context: modelContext) }
+                } else {
+                    showAIConsent = true
+                }
             } label: {
                 if viewModel.isEstimating {
                     HStack {
@@ -300,6 +315,10 @@ final class MealRecordViewModel {
         } catch {
             estimationError = "AI推定に失敗しました。手動で入力してください。"
         }
+    }
+
+    func currentProviderDescription(context: ModelContext) -> String {
+        fetchLLMSetting(context: context).provider.displayName
     }
 
     func load(from meal: MealRecord) {

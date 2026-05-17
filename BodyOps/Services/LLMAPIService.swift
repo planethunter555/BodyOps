@@ -49,7 +49,7 @@ final class LLMAPIService: @unchecked Sendable {
         case .gemini:
             let model = modelName.isEmpty ? LLMProvider.gemini.defaultModel : modelName
             // swiftlint:disable:next force_unwrapping
-            return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent")!
+            return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent?alt=sse")!
         }
     }
 

@@ -63,34 +63,31 @@ final class ChatViewModel {
 
             let providerRaw = setting.provider.rawValue
             let modelNameCopy = setting.modelName
-            let stream = llmService.sendMessage(
+            let response = try await llmService.sendOnce(
                 messages: apiMessages,
                 system: systemPrompt,
                 provider: setting.provider,
                 apiKey: apiKey,
-                modelName: setting.modelName,
-                onUsage: { [weak self] inputTokens, outputTokens in
-                    Task { @MainActor [weak self] in
-                        guard let self, let ctx = self.context else { return }
-                        let record = APIUsageRecord(
-                            provider: providerRaw,
-                            modelName: modelNameCopy,
-                            inputTokens: inputTokens,
-                            outputTokens: outputTokens
-                        )
-                        ctx.insert(record)
-                        try? ctx.save()
-                    }
-                }
+                modelName: setting.modelName
             )
 
-            var fullResponse = ""
-            for try await chunk in stream {
-                fullResponse += chunk
-                messages[assistantIndex].content = fullResponse
+            let record = APIUsageRecord(
+                provider: providerRaw,
+                modelName: modelNameCopy,
+                inputTokens: response.inputTokens,
+                outputTokens: response.outputTokens
+            )
+            context.insert(record)
+            try? context.save()
+
+            let responseText = response.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if responseText.isEmpty {
+                messages[assistantIndex].content = "応答が空でした。モデルを変更するか、時間をおいて再試行してください。"
+            } else {
+                messages[assistantIndex].content = responseText
             }
 
-            saveMessage(role: "assistant", content: fullResponse, imageData: nil, context: context)
+            saveMessage(role: "assistant", content: messages[assistantIndex].content, imageData: nil, context: context)
         } catch let error as LLMError {
             messages[assistantIndex].content = errorText(for: error)
             errorMessage = errorText(for: error)
@@ -148,9 +145,9 @@ final class ChatViewModel {
             predicate: #Predicate { $0.createdAt >= oneWeekAgo },
             sortBy: [SortDescriptor(\.createdAt)]
         )
-        // 最新の会話のみ（コンテキスト肥大化防止で最大20件）
+        // 最新の会話のみ（コンテキスト肥大化防止で最大8件）
         let all = (try? context.fetch(descriptor)) ?? []
-        return Array(all.suffix(20))
+        return Array(all.suffix(8))
     }
 
     // MARK: - Persistence
@@ -193,6 +190,10 @@ final class ChatViewModel {
         let setting = fetchLLMSetting()
         let model = setting.modelName.isEmpty ? setting.provider.defaultModel : setting.modelName
         return "\(setting.provider.displayName)  |  \(model)"
+    }
+
+    var currentProviderDescription: String {
+        fetchLLMSetting().provider.displayName
     }
 }
 

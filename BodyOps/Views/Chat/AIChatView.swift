@@ -7,6 +7,8 @@ struct AIChatView: View {
     @State private var viewModel = ChatViewModel()
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotosPicker = false
+    @State private var showAIConsent = false
+    @AppStorage(AIConsentStorage.key) private var hasAIConsent = false
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -37,6 +39,15 @@ struct AIChatView: View {
             .onChange(of: selectedPhoto) { _, item in
                 loadPhoto(item)
             }
+            .sheet(isPresented: $showAIConsent) {
+                AIConsentSheet(providerName: viewModel.currentProviderDescription) {
+                    hasAIConsent = true
+                    showAIConsent = false
+                    Task { await viewModel.sendMessage() }
+                } onCancel: {
+                    showAIConsent = false
+                }
+            }
         }
     }
 
@@ -64,6 +75,7 @@ struct AIChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 12) {
+                    AIHealthNoticeView()
                     if viewModel.messages.isEmpty {
                         welcomeMessage
                     }
@@ -144,7 +156,11 @@ struct AIChatView: View {
 
                 Button {
                     isInputFocused = false
-                    Task { await viewModel.sendMessage() }
+                    if hasAIConsent {
+                        Task { await viewModel.sendMessage() }
+                    } else {
+                        showAIConsent = true
+                    }
                 } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 32))
