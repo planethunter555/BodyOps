@@ -4,7 +4,6 @@ import SwiftData
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var profiles: [UserProfile]
-    @Query private var llmSettings: [LLMSetting]
     @Query private var notificationSettings: [NotificationSetting]
     @Query(filter: #Predicate<Exercise> { !$0.isPreset }, sort: \Exercise.name)
     private var customExercises: [Exercise]
@@ -29,6 +28,7 @@ struct SettingsView: View {
 
     @State private var availableModels: [String] = []
     @State private var isFetchingModels = false
+    @State private var isLoadingCurrentValues = false
 
     @State private var notificationsEnabled = false
     @State private var selectedWeekdays: Set<Int> = []
@@ -38,10 +38,9 @@ struct SettingsView: View {
     @State private var showSaveAlert = false
     @State private var saveError: String?
     @AppStorage(AIConsentStorage.key) private var hasAIConsent = false
+    @FocusState private var isAPIKeyFocused: Bool
 
     var currentProfile: UserProfile? { profiles.first }
-    var currentLLMSetting: LLMSetting? { llmSettings.first }
-
     var body: some View {
         NavigationStack {
             Form {
@@ -58,6 +57,11 @@ struct SettingsView: View {
             .navigationTitle("設定")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { loadCurrentValues() }
+            .onDisappear {
+                if !isLoadingCurrentValues {
+                    persistAISettingsWithoutAlert()
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
@@ -151,17 +155,13 @@ struct SettingsView: View {
                 }
             }
             .onChange(of: selectedProvider) { _, newProvider in
-                availableModels = ModelListService.shared.cachedModels(for: newProvider)
-                modelName = availableModels.first ?? newProvider.defaultModel
+                guard !isLoadingCurrentValues else { return }
                 apiKeyInput = KeychainService.shared.load(forProvider: newProvider) ?? ""
+                loadModelOptions(for: newProvider, preferredModel: nil)
+                persistAISettingsWithoutAlert()
             }
 
-            Picker("モデル", selection: $modelName) {
-                ForEach(availableModels, id: \.self) { model in
-                    Text(model).tag(model)
-                }
-            }
-            .disabled(availableModels.isEmpty)
+            modelPickerRow
 
             modelRefreshRow
 
@@ -172,10 +172,21 @@ struct SettingsView: View {
                 SecureField("sk-...", text: $apiKeyInput)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
+                    .focused($isAPIKeyFocused)
+                    .onSubmit {
+                        persistAISettingsWithoutAlert()
+                    }
+                    .onChange(of: isAPIKeyFocused) { wasFocused, isFocused in
+                        if wasFocused && !isFocused {
+                            persistAISettingsWithoutAlert()
+                        }
+                    }
+                Text("APIキーとAI設定は自動保存されます。接続テストは任意です。")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
 
             Button {
-                try? KeychainService.shared.save(apiKey: apiKeyInput, forProvider: selectedProvider)
                 Task { await testConnection() }
             } label: {
                 HStack {
@@ -223,6 +234,28 @@ struct SettingsView: View {
                 }
             }
             .disabled(isFetchingModels || apiKeyInput.isEmpty)
+        }
+    }
+
+    @ViewBuilder
+    private var modelPickerRow: some View {
+        if availableModels.isEmpty {
+            HStack {
+                Text("モデル")
+                Spacer()
+                Text("ー")
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            Picker("モデル", selection: $modelName) {
+                ForEach(availableModels, id: \.self) { model in
+                    Text(model).tag(model)
+                }
+            }
+            .onChange(of: modelName) { _, _ in
+                guard !isLoadingCurrentValues else { return }
+                persistAISettingsWithoutAlert()
+            }
         }
     }
 
@@ -398,6 +431,9 @@ struct SettingsView: View {
     }
 
     private func loadCurrentValues() {
+        isLoadingCurrentValues = true
+        defer { isLoadingCurrentValues = false }
+
         if let profile = currentProfile {
             height = String(profile.height)
             weight = String(profile.weight)
@@ -409,17 +445,14 @@ struct SettingsView: View {
             constraints = profile.constraints
             systemPromptPrefix = profile.systemPromptPrefix
         }
-        if let setting = currentLLMSetting {
+
+        let setting = LLMSettingsStore.currentIfExists(in: modelContext)
+        if let setting {
             selectedProvider = setting.provider
         }
-        // キャッシュからモデル一覧を即時ロード
-        availableModels = ModelListService.shared.cachedModels(for: selectedProvider)
-        if let setting = currentLLMSetting {
-            modelName = availableModels.contains(setting.modelName)
-                ? setting.modelName
-                : (availableModels.first ?? selectedProvider.defaultModel)
-        }
         apiKeyInput = KeychainService.shared.load(forProvider: selectedProvider) ?? ""
+        loadModelOptions(for: selectedProvider, preferredModel: setting?.modelName)
+
         // キャッシュが古い場合、APIキーがあれば自動でバックグラウンド更新
         if !ModelListService.shared.isCacheFresh(for: selectedProvider) && !apiKeyInput.isEmpty {
             Task { await refreshModels() }
@@ -442,8 +475,13 @@ struct SettingsView: View {
         let key = apiKeyInput.isEmpty ? (KeychainService.shared.load(forProvider: selectedProvider) ?? "") : apiKeyInput
         let fetched = await ModelListService.shared.fetchModelsIgnoringCache(for: selectedProvider, apiKey: key)
         availableModels = fetched
-        if !availableModels.contains(modelName) {
-            modelName = availableModels.first ?? selectedProvider.defaultModel
+        if availableModels.contains(modelName) {
+            // Keep the user's current selection.
+        } else if let saved = LLMSettingsStore.currentIfExists(in: modelContext)?.modelName,
+                  availableModels.contains(saved) {
+            modelName = saved
+        } else {
+            modelName = availableModels.first ?? ""
         }
         isFetchingModels = false
     }
@@ -451,6 +489,12 @@ struct SettingsView: View {
     private func testConnection() async {
         guard !apiKeyInput.isEmpty else {
             connectionTestResult = "❌ APIキーが入力されていません"
+            return
+        }
+        do {
+            try persistLLMSetting()
+        } catch {
+            connectionTestResult = "❌ APIキーの保存に失敗しました"
             return
         }
         isTestingConnection = true
@@ -468,7 +512,7 @@ struct SettingsView: View {
             ) {
                 response += chunk
             }
-            connectionTestResult = response.isEmpty ? "⚠️ 応答が空です" : "✓ 接続成功"
+            connectionTestResult = response.isEmpty ? "⚠️ 応答が空です" : "✓ 接続成功。AI設定を保存しました。"
         } catch let error as LLMError {
             switch error {
             case .unauthorized: connectionTestResult = "❌ APIキーが無効です"
@@ -480,6 +524,36 @@ struct SettingsView: View {
             connectionTestResult = "❌ 接続失敗"
         }
         isTestingConnection = false
+    }
+
+    private func persistAISettingsWithoutAlert() {
+        do {
+            try persistLLMSetting()
+        } catch {
+            saveError = "AI設定の保存に失敗しました"
+        }
+    }
+
+    private func persistLLMSetting() throws {
+        let llmSetting = try LLMSettingsStore.current(in: modelContext)
+        llmSetting.provider = selectedProvider
+        llmSetting.modelName = modelName
+        llmSetting.apiKey = selectedProvider.rawValue
+        llmSetting.updatedAt = Date()
+
+        try KeychainService.shared.save(apiKey: apiKeyInput, forProvider: selectedProvider)
+        try modelContext.save()
+    }
+
+    private func loadModelOptions(for provider: LLMProvider, preferredModel: String?) {
+        availableModels = ModelListService.shared.cachedModels(for: provider)
+        if let preferredModel, availableModels.contains(preferredModel) {
+            modelName = preferredModel
+        } else if !availableModels.isEmpty {
+            modelName = availableModels.first ?? ""
+        } else {
+            modelName = ""
+        }
     }
 
     private func saveSettings() async {
@@ -500,19 +574,8 @@ struct SettingsView: View {
         profile.constraints = constraints
         profile.systemPromptPrefix = systemPromptPrefix
 
-        let llmSetting: LLMSetting
-        if let existing = currentLLMSetting {
-            llmSetting = existing
-        } else {
-            llmSetting = LLMSetting(provider: selectedProvider, modelName: modelName)
-            modelContext.insert(llmSetting)
-        }
-        llmSetting.provider = selectedProvider
-        llmSetting.modelName = modelName.isEmpty ? selectedProvider.defaultModel : modelName
-        llmSetting.apiKey = selectedProvider.rawValue
-
         do {
-            try KeychainService.shared.save(apiKey: apiKeyInput, forProvider: selectedProvider)
+            try persistLLMSetting()
         } catch {
             saveError = "APIキーの保存に失敗しました"
             return

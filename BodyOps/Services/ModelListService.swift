@@ -25,12 +25,12 @@ final class ModelListService: @unchecked Sendable {
                 return filtered
             }
         }
-        return loadCache(for: provider) ?? provider.models
+        return loadCache(for: provider) ?? []
     }
 
     /// キャッシュがあればそれを返す（非同期不要な初期表示用）
     func cachedModels(for provider: LLMProvider) -> [String] {
-        loadCache(for: provider) ?? provider.models
+        loadCache(for: provider) ?? []
     }
 
     func isCacheFresh(for provider: LLMProvider) -> Bool {

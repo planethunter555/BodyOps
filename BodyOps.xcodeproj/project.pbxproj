@@ -18,6 +18,7 @@
 		1A2B3C4D5E6F7A8B9C0D1E2F /* APIUsageRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3B4C5D6E7F8A9B0C1D2E3F /* APIUsageRecord.swift */; };
 		1D8B7034A90E4D1A9B3F2C11 /* AIPrivacyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8B7033A90E4D1A9B3F2C11 /* AIPrivacyViews.swift */; };
 		1B3800E8372352B996171DD3 /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0441871ABDC563C063788A35 /* KeychainServiceTests.swift */; };
+		1F4C7E9A0B2D4F6183A5C7E9 /* LLMSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4C7E990B2D4F6183A5C7E9 /* LLMSettingsStore.swift */; };
 		30E05F1C76E0413B19C9C94E /* WorkoutRecordSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B706303810A7484460133DE2 /* WorkoutRecordSheet.swift */; };
 		337CA0F28A72B51009E6384A /* WorkoutCSVImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB60D85E503124A0A7C3CF4 /* WorkoutCSVImporter.swift */; };
 		3C7A2ED4318D546943B09AA1 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3278A5B6D3F0FE5248639FE /* HistoryView.swift */; };
@@ -71,6 +72,7 @@
 		1629F4A039635E3B58BFF04C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
 		1D8B7033A90E4D1A9B3F2C11 /* AIPrivacyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPrivacyViews.swift; sourceTree = "<group>"; };
+		1F4C7E990B2D4F6183A5C7E9 /* LLMSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettingsStore.swift; sourceTree = "<group>"; };
 		25BCC8D85B066F0248D6D6BF /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		2A3B4C5D6E7F8A9B0C1D2E3F /* APIUsageRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIUsageRecord.swift; sourceTree = "<group>"; };
 		2AB60D85E503124A0A7C3CF4 /* WorkoutCSVImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCSVImporter.swift; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 				F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */,
 				25BCC8D85B066F0248D6D6BF /* KeychainService.swift */,
 				C30A0B031BF2AE537623017C /* LLMAPIService.swift */,
+				1F4C7E990B2D4F6183A5C7E9 /* LLMSettingsStore.swift */,
 				EE495FE62D3AF8789468257C /* NotificationService.swift */,
 				15F43DFD67FE4C4E818D6BE6 /* SystemPromptBuilder.swift */,
 				F30AF7DEF61D74A9196793E9 /* WorkoutCopyService.swift */,
@@ -412,6 +415,7 @@
 				C765BCC22F8B8A7C00760DE5 /* ModelListService.swift in Sources */,
 				63211D5E371BE96A68E9E670 /* LLMAPIService.swift in Sources */,
 				B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */,
+				1F4C7E9A0B2D4F6183A5C7E9 /* LLMSettingsStore.swift in Sources */,
 				E1AC319B883FEC7E4383DFDD /* MealRecord.swift in Sources */,
 				6DD467E5A46808397EE7C15E /* MealRecordSheet.swift in Sources */,
 				A5CE4CFB7332DC3A886AD642 /* NotificationService.swift in Sources */,

@@ -35,6 +35,7 @@ struct AIChatView: View {
             }
             .onAppear {
                 viewModel.setup(context: modelContext)
+                viewModel.refreshConfigurationState()
             }
             .onChange(of: selectedPhoto) { _, item in
                 loadPhoto(item)

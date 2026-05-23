@@ -360,8 +360,7 @@ final class MealRecordViewModel {
     // MARK: - Private
 
     private func fetchLLMSetting(context: ModelContext) -> LLMSetting {
-        let descriptor = FetchDescriptor<LLMSetting>()
-        return (try? context.fetch(descriptor).first) ?? LLMSetting()
+        (try? LLMSettingsStore.current(in: context)) ?? LLMSetting()
     }
 
     private func buildPrompt(description: String) -> String {

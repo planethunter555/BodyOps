@@ -12,6 +12,7 @@ final class ChatViewModel {
     var errorMessage: String?
     var pendingImageData: Data?
     var currentSessionTag: String = UUID().uuidString
+    var hasConfiguredAPIKey = false
 
     // MARK: - Private
     private var context: ModelContext?
@@ -21,7 +22,13 @@ final class ChatViewModel {
 
     func setup(context: ModelContext) {
         self.context = context
+        refreshConfigurationState()
         loadCurrentSessionMessages()
+    }
+
+    func refreshConfigurationState() {
+        let setting = fetchLLMSetting()
+        hasConfiguredAPIKey = KeychainService.shared.load(forProvider: setting.provider) != nil
     }
 
     // MARK: - Send Message
@@ -35,9 +42,11 @@ final class ChatViewModel {
         let setting = fetchLLMSetting()
         let apiKey = KeychainService.shared.load(forProvider: setting.provider) ?? ""
         guard !apiKey.isEmpty else {
+            hasConfiguredAPIKey = false
             errorMessage = "APIキーが設定されていません。設定タブで入力してください。"
             return
         }
+        hasConfiguredAPIKey = true
 
         let imageData = pendingImageData
         inputText = ""
@@ -135,8 +144,7 @@ final class ChatViewModel {
 
     private func fetchLLMSetting() -> LLMSetting {
         guard let context else { return LLMSetting() }
-        let descriptor = FetchDescriptor<LLMSetting>()
-        return (try? context.fetch(descriptor).first) ?? LLMSetting()
+        return (try? LLMSettingsStore.current(in: context)) ?? LLMSetting()
     }
 
     private func fetchWeeklyHistory(context: ModelContext) -> [ChatMessage] {
@@ -182,13 +190,12 @@ final class ChatViewModel {
     }
 
     var hasAPIKey: Bool {
-        let setting = fetchLLMSetting()
-        return KeychainService.shared.load(forProvider: setting.provider) != nil
+        hasConfiguredAPIKey
     }
 
     var currentModelDescription: String {
         let setting = fetchLLMSetting()
-        let model = setting.modelName.isEmpty ? setting.provider.defaultModel : setting.modelName
+        let model = setting.modelName.isEmpty ? "ー" : setting.modelName
         return "\(setting.provider.displayName)  |  \(model)"
     }
 
