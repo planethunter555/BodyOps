@@ -2,6 +2,14 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+/// ストリーミング中の進行状態（インジケータ表示用）
+enum ChatStreamPhase {
+    case idle
+    case connecting
+    case thinking
+    case streaming
+}
+
 @Observable
 @MainActor
 final class ChatViewModel {
@@ -13,10 +21,12 @@ final class ChatViewModel {
     var pendingImageData: Data?
     var currentSessionTag: String = UUID().uuidString
     var hasConfiguredAPIKey = false
+    var streamPhase: ChatStreamPhase = .idle
 
     // MARK: - Private
     private var context: ModelContext?
     private let llmService = LLMAPIService()
+    private var streamTask: Task<Void, Never>?
 
     // MARK: - Setup
 
@@ -32,6 +42,16 @@ final class ChatViewModel {
     }
 
     // MARK: - Send Message
+
+    /// 送信を開始する（停止できるようタスクを保持する）
+    func send() {
+        streamTask = Task { await sendMessage() }
+    }
+
+    /// ストリーミングを停止する。受信済みの部分テキストは保持される。
+    func stopStreaming() {
+        streamTask?.cancel()
+    }
 
     func sendMessage() async {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -64,41 +84,72 @@ final class ChatViewModel {
         let assistantIndex = messages.count - 1
 
         isLoading = true
-        defer { isLoading = false }
+        streamPhase = .connecting
+        defer {
+            isLoading = false
+            streamPhase = .idle
+        }
+
+        let systemPrompt = buildSystemPrompt(context: context)
+        let apiMessages = buildAPIMessages(currentText: text, imageData: imageData, context: context)
+        let providerRaw = setting.provider.rawValue
+        let modelNameCopy = setting.modelName
+
+        var receivedText = ""
+        var receivedThinking = ""
+        var usageInput = 0
+        var usageOutput = 0
 
         do {
-            let systemPrompt = buildSystemPrompt(context: context)
-            let apiMessages = buildAPIMessages(currentText: text, imageData: imageData, context: context)
-
-            let providerRaw = setting.provider.rawValue
-            let modelNameCopy = setting.modelName
-            let response = try await llmService.sendOnce(
+            let stream = llmService.streamMessage(
                 messages: apiMessages,
                 system: systemPrompt,
                 provider: setting.provider,
                 apiKey: apiKey,
                 modelName: setting.modelName
             )
+            for try await event in stream {
+                switch event {
+                case .thinking(let delta):
+                    receivedThinking += delta
+                    messages[assistantIndex].thinking = receivedThinking
+                    if streamPhase == .connecting { streamPhase = .thinking }
+                case .text(let delta):
+                    receivedText += delta
+                    messages[assistantIndex].content = receivedText
+                    streamPhase = .streaming
+                case .usage(let input, let output):
+                    usageInput = input
+                    usageOutput = output
+                }
+            }
 
-            let record = APIUsageRecord(
-                provider: providerRaw,
-                modelName: modelNameCopy,
-                inputTokens: response.inputTokens,
-                outputTokens: response.outputTokens
-            )
-            context.insert(record)
-            try? context.save()
+            if usageInput > 0 || usageOutput > 0 {
+                let record = APIUsageRecord(
+                    provider: providerRaw,
+                    modelName: modelNameCopy,
+                    inputTokens: usageInput,
+                    outputTokens: usageOutput
+                )
+                context.insert(record)
+                try? context.save()
+            }
 
-            let responseText = response.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let responseText = receivedText.trimmingCharacters(in: .whitespacesAndNewlines)
             if responseText.isEmpty {
                 messages[assistantIndex].content = "応答が空でした。モデルを変更するか、時間をおいて再試行してください。"
             } else {
                 messages[assistantIndex].content = responseText
             }
-
             saveMessage(role: "assistant", content: messages[assistantIndex].content, imageData: nil, context: context)
         } catch let error as LLMError {
-            messages[assistantIndex].content = errorText(for: error)
+            // 途中まで受信できていれば部分テキストを保持してエラー行を追記する
+            if receivedText.isEmpty {
+                messages[assistantIndex].content = errorText(for: error)
+            } else {
+                messages[assistantIndex].content = receivedText + "\n\n⚠️ " + errorText(for: error)
+                saveMessage(role: "assistant", content: receivedText, imageData: nil, context: context)
+            }
             errorMessage = errorText(for: error)
         } catch {
             messages[assistantIndex].content = "エラーが発生しました。再試行してください。"
@@ -211,6 +262,8 @@ struct ChatBubbleItem: Identifiable {
     var role: String
     var content: String
     var imageData: Data?
+    /// Claudeのadaptive thinking（要約された思考）テキスト
+    var thinking: String?
 
     var isUser: Bool { role == "user" }
 }

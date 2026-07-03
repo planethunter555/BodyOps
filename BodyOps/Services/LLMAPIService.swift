@@ -8,6 +8,35 @@ protocol URLSessionProtocol {
 
 extension URLSession: URLSessionProtocol {}
 
+/// SSEレスポンスを行単位で逐次受信する抽象。
+/// URLSession.bytes(for:) は具象型のためテストで差し替えられるようにする。
+protocol SSELineStreaming: Sendable {
+    func lines(for request: URLRequest) async throws -> (lines: AsyncThrowingStream<String, Error>, response: HTTPURLResponse)
+}
+
+struct URLSessionSSEStreamer: SSELineStreaming {
+    func lines(for request: URLRequest) async throws -> (lines: AsyncThrowingStream<String, Error>, response: HTTPURLResponse) {
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw LLMError.serverError
+        }
+        let stream = AsyncThrowingStream<String, Error> { continuation in
+            let task = Task {
+                do {
+                    for try await line in bytes.lines {
+                        continuation.yield(line)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+        return (stream, httpResponse)
+    }
+}
+
 // MARK: - Models
 
 struct LLMMessage: Sendable {
@@ -29,13 +58,26 @@ enum LLMError: Error, Equatable {
     case networkError
 }
 
+/// 真のストリーミングで受信するイベント
+enum LLMStreamEvent: Equatable, Sendable {
+    /// 回答テキストの増分
+    case text(String)
+    /// 思考（Claude adaptive thinking のサマリー）の増分
+    case thinking(String)
+    /// トークン使用量（ストリーム完了時に1回）
+    case usage(input: Int, output: Int)
+}
+
 // MARK: - Service
 
 final class LLMAPIService: @unchecked Sendable {
     private let session: URLSessionProtocol
+    private let sseStreamer: SSELineStreaming
 
-    init(session: URLSessionProtocol = URLSession.shared) {
+    init(session: URLSessionProtocol = URLSession.shared,
+         sseStreamer: SSELineStreaming = URLSessionSSEStreamer()) {
         self.session = session
+        self.sseStreamer = sseStreamer
     }
 
     func endpointURL(for provider: LLMProvider, modelName: String = "") -> URL {
@@ -102,6 +144,124 @@ final class LLMAPIService: @unchecked Sendable {
                 }
             }
         }
+    }
+
+    /// 真のストリーミング送信。SSEを行単位で受信し、テキスト/思考/使用量イベントを逐次yieldする。
+    /// タスクのキャンセルで接続も切断される。
+    func streamMessage(
+        messages: [LLMMessage],
+        system: String,
+        provider: LLMProvider,
+        apiKey: String,
+        modelName: String = ""
+    ) -> AsyncThrowingStream<LLMStreamEvent, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task { @Sendable [sseStreamer] in
+                do {
+                    var request = URLRequest(url: self.endpointURL(for: provider, modelName: modelName))
+                    request.httpMethod = "POST"
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    self.applyAuthHeaders(to: &request, provider: provider, apiKey: apiKey)
+                    request.httpBody = try self.buildRequestBody(
+                        messages: messages, system: system, provider: provider, modelName: modelName, stream: true
+                    )
+
+                    let (lines, httpResponse) = try await sseStreamer.lines(for: request)
+                    switch httpResponse.statusCode {
+                    case 200: break
+                    case 401: throw LLMError.unauthorized
+                    case 429: throw LLMError.rateLimited
+                    default: throw LLMError.serverError
+                    }
+
+                    var inputTokens = 0
+                    var outputTokens = 0
+                    for try await line in lines {
+                        for event in Self.parseSSELine(line, provider: provider) {
+                            if case .usage(let input, let output) = event {
+                                if input > 0 { inputTokens = input }
+                                if output > 0 { outputTokens = output }
+                            } else {
+                                continuation.yield(event)
+                            }
+                        }
+                    }
+                    if inputTokens > 0 || outputTokens > 0 {
+                        continuation.yield(.usage(input: inputTokens, output: outputTokens))
+                    }
+                    continuation.finish()
+                } catch let error as LLMError {
+                    continuation.finish(throwing: error)
+                } catch is CancellationError {
+                    // 停止ボタンによるキャンセル: 部分テキストを活かすためエラーにしない
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: LLMError.networkError)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    /// SSEの1行をプロバイダー別にパースしてイベント列を返す。
+    /// usageイベントは途中経過も返す（呼び出し側で最後の値を採用する）。
+    static func parseSSELine(_ line: String, provider: LLMProvider) -> [LLMStreamEvent] {
+        let stripped = line.hasPrefix("data: ") ? String(line.dropFirst(6)) : line
+        guard !stripped.isEmpty, stripped != "[DONE]" else { return [] }
+        guard let lineData = stripped.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any] else { return [] }
+
+        var events: [LLMStreamEvent] = []
+        switch provider {
+        case .claude:
+            if let delta = json["delta"] as? [String: Any] {
+                if let text = delta["text"] as? String {
+                    events.append(.text(text))
+                }
+                if let thinking = delta["thinking"] as? String {
+                    events.append(.thinking(thinking))
+                }
+            }
+            // message_start → input tokens
+            if let message = json["message"] as? [String: Any],
+               let usage = message["usage"] as? [String: Any],
+               let count = usage["input_tokens"] as? Int {
+                events.append(.usage(input: count, output: 0))
+            }
+            // message_delta → output tokens
+            if let usage = json["usage"] as? [String: Any],
+               let count = usage["output_tokens"] as? Int {
+                events.append(.usage(input: 0, output: count))
+            }
+        case .openai:
+            if let choices = json["choices"] as? [[String: Any]],
+               let delta = choices.first?["delta"] as? [String: Any],
+               let content = delta["content"] as? String {
+                events.append(.text(content))
+            }
+            // stream_options: include_usage: true の最終チャンク
+            if let usage = json["usage"] as? [String: Any] {
+                events.append(.usage(
+                    input: usage["prompt_tokens"] as? Int ?? 0,
+                    output: usage["completion_tokens"] as? Int ?? 0
+                ))
+            }
+        case .gemini:
+            if let candidates = json["candidates"] as? [[String: Any]],
+               let content = candidates.first?["content"] as? [String: Any],
+               let parts = content["parts"] as? [[String: Any]],
+               let text = parts.first?["text"] as? String {
+                events.append(.text(text))
+            }
+            // usageMetadata は累積値（最後のものが最終値）
+            if let meta = json["usageMetadata"] as? [String: Any] {
+                events.append(.usage(
+                    input: meta["promptTokenCount"] as? Int ?? 0,
+                    output: meta["candidatesTokenCount"] as? Int ?? 0
+                ))
+            }
+        }
+        return events
     }
 
     func buildRequestBody(
@@ -172,8 +332,10 @@ final class LLMAPIService: @unchecked Sendable {
         }
         switch provider {
         case .claude:
+            // thinkingブロックが先頭に来る場合があるため、type == "text" のブロックを探す
             guard let content = json["content"] as? [[String: Any]],
-                  let text = content.first?["text"] as? String else { throw LLMError.serverError }
+                  let text = content.first(where: { $0["type"] as? String == "text" })?["text"] as? String
+            else { throw LLMError.serverError }
             let usage = json["usage"] as? [String: Any]
             return (text,
                     usage?["input_tokens"] as? Int ?? 0,
@@ -217,6 +379,13 @@ final class LLMAPIService: @unchecked Sendable {
         }
     }
 
+    /// adaptive thinking（budget_tokens不要の新方式）に対応しているClaudeモデルか
+    static func supportsAdaptiveThinking(_ model: String) -> Bool {
+        let prefixes = ["claude-sonnet-4-6", "claude-sonnet-5", "claude-opus-4-6",
+                        "claude-opus-4-7", "claude-opus-4-8", "claude-fable"]
+        return prefixes.contains { model.hasPrefix($0) }
+    }
+
     private func buildClaudeBody(messages: [LLMMessage], system: String, modelName: String, stream: Bool = true) throws -> Data {
         let model = modelName.isEmpty ? LLMProvider.claude.defaultModel : modelName
         let encodedMessages = messages.map { msg -> ClaudeMessagePayload in
@@ -231,11 +400,17 @@ final class LLMAPIService: @unchecked Sendable {
             }
             return ClaudeMessagePayload(role: msg.role, content: .text(msg.content))
         }
+        // ストリーミング（チャット）時のみ思考サマリーを要求する。
+        // sendOnce（PFC推定など）は思考ブロックが混ざるとJSONパースの妨げになるため付けない。
+        let thinking: ClaudeThinkingConfig? = (stream && Self.supportsAdaptiveThinking(model))
+            ? ClaudeThinkingConfig(type: "adaptive", display: "summarized")
+            : nil
         let payload = ClaudeRequestPayload(
             model: model,
-            maxTokens: 1024,
+            maxTokens: thinking != nil ? 4096 : 1024,
             stream: stream,
             system: system.isEmpty ? nil : system,
+            thinking: thinking,
             messages: encodedMessages
         )
         let encoder = JSONEncoder()
@@ -361,12 +536,18 @@ private struct ClaudeRequestPayload: Encodable {
     let maxTokens: Int
     let stream: Bool
     let system: String?
+    let thinking: ClaudeThinkingConfig?
     let messages: [ClaudeMessagePayload]
 
     enum CodingKeys: String, CodingKey {
-        case model, stream, system, messages
+        case model, stream, system, thinking, messages
         case maxTokens = "max_tokens"
     }
+}
+
+private struct ClaudeThinkingConfig: Encodable {
+    let type: String
+    let display: String
 }
 
 private struct ClaudeImageSource: Encodable {

@@ -44,7 +44,7 @@ struct AIChatView: View {
                 AIConsentSheet(providerName: viewModel.currentProviderDescription) {
                     hasAIConsent = true
                     showAIConsent = false
-                    Task { await viewModel.sendMessage() }
+                    viewModel.send()
                 } onCancel: {
                     showAIConsent = false
                 }
@@ -84,8 +84,8 @@ struct AIChatView: View {
                         ChatBubbleView(bubble: bubble)
                             .id(bubble.id)
                     }
-                    if viewModel.isLoading && viewModel.messages.last?.role == "user" {
-                        typingIndicator
+                    if showsProgressIndicator {
+                        StreamPhaseIndicatorView(phase: viewModel.streamPhase)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -95,6 +95,9 @@ struct AIChatView: View {
                 scrollToBottom(proxy: proxy)
             }
             .onChange(of: viewModel.messages.last?.content) { _, _ in
+                scrollToBottom(proxy: proxy)
+            }
+            .onChange(of: viewModel.messages.last?.thinking) { _, _ in
                 scrollToBottom(proxy: proxy)
             }
         }
@@ -127,8 +130,10 @@ struct AIChatView: View {
         .padding(.bottom, 16)
     }
 
-    private var typingIndicator: some View {
-        TypingIndicatorView()
+    /// 最初のテキストが届くまで進行状況インジケータを表示する
+    private var showsProgressIndicator: Bool {
+        guard viewModel.isLoading, let last = viewModel.messages.last else { return false }
+        return !last.isUser && last.content.isEmpty
     }
 
     // MARK: - Input Bar
@@ -155,19 +160,30 @@ struct AIChatView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .focused($isInputFocused)
 
-                Button {
-                    isInputFocused = false
-                    if hasAIConsent {
-                        Task { await viewModel.sendMessage() }
-                    } else {
-                        showAIConsent = true
+                if viewModel.isLoading {
+                    // ストリーミング中は停止ボタンに切り替え
+                    Button {
+                        viewModel.stopStreaming()
+                    } label: {
+                        Image(systemName: "stop.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(.red)
                     }
-                } label: {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(canSend ? .blue : .gray)
+                } else {
+                    Button {
+                        isInputFocused = false
+                        if hasAIConsent {
+                            viewModel.send()
+                        } else {
+                            showAIConsent = true
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(canSend ? .blue : .gray)
+                    }
+                    .disabled(!canSend)
                 }
-                .disabled(!canSend || viewModel.isLoading)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -222,10 +238,21 @@ struct AIChatView: View {
     }
 }
 
-// MARK: - Typing Indicator
+// MARK: - Stream Phase Indicator
 
-struct TypingIndicatorView: View {
+/// ストリーミングの進行状況（接続中→考え中）を経過秒数つきで表示するインジケータ
+struct StreamPhaseIndicatorView: View {
+    let phase: ChatStreamPhase
     @State private var animating = false
+    @State private var startDate = Date()
+
+    private var phaseLabel: String {
+        switch phase {
+        case .connecting: return "接続中…"
+        case .thinking: return "考え中…"
+        default: return "応答を生成中…"
+        }
+    }
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
@@ -237,19 +264,33 @@ struct TypingIndicatorView: View {
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
-            HStack(spacing: 4) {
-                ForEach(0..<3) { index in
-                    Circle()
-                        .fill(Color(.systemGray3))
-                        .frame(width: 8, height: 8)
-                        .scaleEffect(animating ? 1.0 : 0.5)
-                        .opacity(animating ? 1.0 : 0.3)
-                        .animation(
-                            .easeInOut(duration: 0.5)
-                                .repeatForever(autoreverses: true)
-                                .delay(Double(index) * 0.15),
-                            value: animating
-                        )
+            HStack(spacing: 6) {
+                HStack(spacing: 4) {
+                    ForEach(0..<3) { index in
+                        Circle()
+                            .fill(Color(.systemGray3))
+                            .frame(width: 6, height: 6)
+                            .scaleEffect(animating ? 1.0 : 0.5)
+                            .opacity(animating ? 1.0 : 0.3)
+                            .animation(
+                                .easeInOut(duration: 0.5)
+                                    .repeatForever(autoreverses: true)
+                                    .delay(Double(index) * 0.15),
+                                value: animating
+                            )
+                    }
+                }
+                Text(phaseLabel)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TimelineView(.periodic(from: startDate, by: 1)) { context in
+                    let elapsed = Int(context.date.timeIntervalSince(startDate))
+                    if elapsed >= 3 {
+                        Text("\(elapsed)秒")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .monospacedDigit()
+                    }
                 }
             }
             .padding(.horizontal, 12)
@@ -258,7 +299,10 @@ struct TypingIndicatorView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16))
             Spacer()
         }
-        .onAppear { animating = true }
+        .onAppear {
+            animating = true
+            startDate = Date()
+        }
     }
 }
 
@@ -266,6 +310,7 @@ struct TypingIndicatorView: View {
 
 struct ChatBubbleView: View {
     let bubble: ChatBubbleItem
+    @State private var thinkingExpanded = false
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
@@ -276,6 +321,47 @@ struct ChatBubbleView: View {
                 avatarIcon
                 bubbleContent
                 Spacer(minLength: 60)
+            }
+        }
+    }
+
+    /// 思考中はライブ表示、回答が届いたら折りたたみに切り替える
+    @ViewBuilder
+    private var thinkingSection: some View {
+        if let thinking = bubble.thinking, !thinking.isEmpty {
+            if bubble.content.isEmpty {
+                // 回答がまだ無い間は思考をライブ表示（何をしているか見える安心感）
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("考え中…", systemImage: "brain")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                    Text(thinking)
+                        .font(.caption)
+                        .italic()
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(6)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(.systemGray6).opacity(0.6))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                DisclosureGroup(isExpanded: $thinkingExpanded) {
+                    Text(thinking)
+                        .font(.caption)
+                        .italic()
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 4)
+                } label: {
+                    Label("思考の過程", systemImage: "brain")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color(.systemGray6).opacity(0.6))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
     }
@@ -293,6 +379,7 @@ struct ChatBubbleView: View {
 
     private var bubbleContent: some View {
         VStack(alignment: bubble.isUser ? .trailing : .leading, spacing: 4) {
+            thinkingSection
             if let imageData = bubble.imageData, let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
