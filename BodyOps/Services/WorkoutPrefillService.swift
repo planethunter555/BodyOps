@@ -98,14 +98,22 @@ struct WorkoutPrefillService {
 
     /// セッションに紐づく全セットをメモリフィルターで確実に取得する
     /// （predicate の optional chaining や session.sets のレイジーロードに依存しない）
+    /// 記録順（createdAt）→セット番号の順で決定的に並べる。
     func loadSets(for session: WorkoutSession) -> [WorkoutSet] {
         let sessionId = session.id
         let all = (try? context.fetch(FetchDescriptor<WorkoutSet>())) ?? []
         let filtered = all
             .filter { $0.session?.id == sessionId }
-            .sorted { $0.setNumber < $1.setNumber }
+            .sorted(by: Self.recordingOrder)
         return filtered.isEmpty
-            ? session.sets.sorted { $0.setNumber < $1.setNumber }
+            ? session.sets.sorted(by: Self.recordingOrder)
             : filtered
+    }
+
+    private static func recordingOrder(_ lhs: WorkoutSet, _ rhs: WorkoutSet) -> Bool {
+        if lhs.createdAt != rhs.createdAt {
+            return lhs.createdAt < rhs.createdAt
+        }
+        return lhs.setNumber < rhs.setNumber
     }
 }
