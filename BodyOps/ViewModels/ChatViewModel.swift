@@ -27,13 +27,34 @@ final class ChatViewModel {
     private var context: ModelContext?
     private let llmService = LLMAPIService()
     private var streamTask: Task<Void, Never>?
+    private var hasPruned = false
+    private static let sessionTagKey = "currentChatSessionTag"
 
     // MARK: - Setup
 
     func setup(context: ModelContext) {
         self.context = context
+        restoreSessionTag()
         refreshConfigurationState()
         loadCurrentSessionMessages()
+        // 起動ごとに1回だけ保持ポリシーを適用（古いセッション/画像データの削除）
+        if !hasPruned {
+            hasPruned = true
+            ChatHistoryStore.prune(in: context, keepingCurrent: currentSessionTag)
+        }
+    }
+
+    /// 前回のセッションタグを復元する（再起動しても会話が消えないように）
+    private func restoreSessionTag() {
+        if let stored = UserDefaults.standard.string(forKey: Self.sessionTagKey), !stored.isEmpty {
+            currentSessionTag = stored
+        } else {
+            UserDefaults.standard.set(currentSessionTag, forKey: Self.sessionTagKey)
+        }
+    }
+
+    private func persistSessionTag() {
+        UserDefaults.standard.set(currentSessionTag, forKey: Self.sessionTagKey)
     }
 
     func refreshConfigurationState() {
@@ -73,6 +94,10 @@ final class ChatViewModel {
         pendingImageData = nil
         errorMessage = nil
 
+        // 履歴は今回のメッセージを保存する前に取得する（重複送信を防ぐ）
+        let systemPrompt = buildSystemPrompt(context: context)
+        let apiMessages = buildAPIMessages(currentText: text, imageData: imageData, context: context)
+
         // ユーザーメッセージをUI＆DBに追加
         let userBubble = ChatBubbleItem(role: "user", content: text, imageData: imageData)
         messages.append(userBubble)
@@ -89,9 +114,6 @@ final class ChatViewModel {
             isLoading = false
             streamPhase = .idle
         }
-
-        let systemPrompt = buildSystemPrompt(context: context)
-        let apiMessages = buildAPIMessages(currentText: text, imageData: imageData, context: context)
         let providerRaw = setting.provider.rawValue
         let modelNameCopy = setting.modelName
 
@@ -160,8 +182,37 @@ final class ChatViewModel {
 
     func startNewChat() {
         currentSessionTag = UUID().uuidString
+        persistSessionTag()
         messages = []
         errorMessage = nil
+    }
+
+    // MARK: - Session History
+
+    /// 過去のセッションを読み込んで表示する（続きから送信も可能）
+    func loadSession(tag: String) {
+        guard let context else { return }
+        stopStreaming()
+        currentSessionTag = tag
+        persistSessionTag()
+        errorMessage = nil
+        let stored = ChatHistoryStore.messages(tag: tag, in: context)
+        messages = stored.map { ChatBubbleItem(role: $0.role, content: $0.content, imageData: $0.imageData) }
+    }
+
+    /// セッション一覧（履歴シート用）
+    func sessionSummaries() -> [ChatSessionSummary] {
+        guard let context else { return [] }
+        return ChatHistoryStore.sessions(in: context)
+    }
+
+    /// セッションを削除する。現在表示中のセッションを消した場合は新規会話に切り替える。
+    func deleteSession(tag: String) {
+        guard let context else { return }
+        ChatHistoryStore.deleteSession(tag: tag, in: context)
+        if tag == currentSessionTag {
+            startNewChat()
+        }
     }
 
     // MARK: - Context Building
@@ -179,8 +230,8 @@ final class ChatViewModel {
     private func buildAPIMessages(currentText: String, imageData: Data?, context: ModelContext) -> [LLMMessage] {
         var result: [LLMMessage] = []
 
-        // 過去1週間の会話履歴（画像は除外してテキストのみ送信 - メモリ節約）
-        let history = fetchWeeklyHistory(context: context)
+        // 現在のセッションの直近履歴（画像は除外してテキストのみ送信 - メモリ節約）
+        let history = fetchSessionHistory(context: context)
         for msg in history {
             result.append(LLMMessage(role: msg.role, content: msg.content, imageData: nil))
         }
@@ -198,13 +249,14 @@ final class ChatViewModel {
         return (try? LLMSettingsStore.current(in: context)) ?? LLMSetting()
     }
 
-    private func fetchWeeklyHistory(context: ModelContext) -> [ChatMessage] {
-        let oneWeekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+    /// LLMに渡す会話コンテキスト。現在のセッション内の直近8件に限定する
+    /// （セッションをまたぐと文脈が混ざるため、セッション内スコープとする）
+    private func fetchSessionHistory(context: ModelContext) -> [ChatMessage] {
+        let tag = currentSessionTag
         let descriptor = FetchDescriptor<ChatMessage>(
-            predicate: #Predicate { $0.createdAt >= oneWeekAgo },
+            predicate: #Predicate { $0.sessionTag == tag },
             sortBy: [SortDescriptor(\.createdAt)]
         )
-        // 最新の会話のみ（コンテキスト肥大化防止で最大8件）
         let all = (try? context.fetch(descriptor)) ?? []
         return Array(all.suffix(8))
     }

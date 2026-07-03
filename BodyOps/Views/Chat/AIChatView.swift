@@ -8,6 +8,7 @@ struct AIChatView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotosPicker = false
     @State private var showAIConsent = false
+    @State private var showSessionList = false
     @AppStorage(AIConsentStorage.key) private var hasAIConsent = false
     @FocusState private var isInputFocused: Bool
 
@@ -32,6 +33,21 @@ struct AIChatView: View {
                         Label("新しい会話", systemImage: "square.and.pencil")
                     }
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showSessionList = true
+                    } label: {
+                        Label("会話履歴", systemImage: "clock.arrow.circlepath")
+                    }
+                }
+            }
+            .sheet(isPresented: $showSessionList) {
+                ChatSessionListView(
+                    currentTag: viewModel.currentSessionTag,
+                    summaries: viewModel.sessionSummaries(),
+                    onSelect: { tag in viewModel.loadSession(tag: tag) },
+                    onDelete: { tag in viewModel.deleteSession(tag: tag) }
+                )
             }
             .onAppear {
                 viewModel.setup(context: modelContext)
