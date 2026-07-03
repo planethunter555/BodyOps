@@ -1,32 +1,30 @@
 import SwiftUI
 import SwiftData
 
-struct TodayView: View {
+/// 「記録」タブの「今日」モードの中身。
+/// NavigationStack は RecordTabView が持つため、ここでは持たない。
+struct TodayContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel = TodayViewModel()
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    dateNavigationHeader
-                    workoutSummaryCard
-                    mealSummaryCard
-                    encourageCard
-                }
-                .padding()
+        ScrollView {
+            VStack(spacing: 16) {
+                dateNavigationHeader
+                workoutSummaryCard
+                mealSummaryCard
+                encourageCard
             }
-            .navigationTitle("今日")
-            .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                viewModel.setup(context: modelContext)
-            }
-            .sheet(isPresented: $viewModel.showWorkoutSheet, onDismiss: workoutSheetDismissed) {
-                WorkoutRecordSheet(date: viewModel.selectedDate)
-            }
-            .sheet(isPresented: $viewModel.showMealSheet, onDismiss: mealSheetDismissed) {
-                MealRecordSheet(date: viewModel.selectedDate)
-            }
+            .padding()
+        }
+        .onAppear {
+            viewModel.setup(context: modelContext)
+        }
+        .sheet(isPresented: $viewModel.showWorkoutSheet, onDismiss: workoutSheetDismissed) {
+            WorkoutRecordSheet(date: viewModel.selectedDate)
+        }
+        .sheet(isPresented: $viewModel.showMealSheet, onDismiss: mealSheetDismissed) {
+            MealRecordSheet(date: viewModel.selectedDate)
         }
     }
 

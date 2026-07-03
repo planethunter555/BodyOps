@@ -3,12 +3,12 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            TodayView()
-                .tabItem { Label("今日", systemImage: "calendar") }
-            HistoryView()
-                .tabItem { Label("履歴", systemImage: "clock.arrow.circlepath") }
+            RecordTabView()
+                .tabItem { Label("記録", systemImage: "square.and.pencil") }
+            GraphView()
+                .tabItem { Label("グラフ", systemImage: "chart.xyaxis.line") }
             AIChatView()
-                .tabItem { Label("アドバイス", systemImage: "brain") }
+                .tabItem { Label("AIコーチ", systemImage: "brain") }
             SettingsView()
                 .tabItem { Label("設定", systemImage: "gearshape") }
         }
