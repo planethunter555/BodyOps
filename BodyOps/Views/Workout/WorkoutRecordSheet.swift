@@ -1,47 +1,44 @@
 import SwiftUI
 import SwiftData
 
-struct WorkoutSetEntry: Identifiable {
-    let id = UUID()
-    var setNumber: Int
-    var weight: Double
-    var reps: Int
-    var volume: Double { weight * Double(reps) }
-}
-
-struct WorkoutExerciseEntry: Identifiable {
-    let id = UUID()
-    var exercise: Exercise
-    var sets: [WorkoutSetEntry]
-    var totalVolume: Double { sets.reduce(0) { $0 + $1.volume } }
-}
-
 struct WorkoutRecordSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \WorkoutSession.date) private var allSessions: [WorkoutSession]
     let date: Date
     var editingSession: WorkoutSession? = nil
 
     @State private var exercises: [WorkoutExerciseEntry] = []
     @State private var sessionMemo = ""
     @State private var showExercisePicker = false
-    @State private var copyDate: Date = Calendar.current.startOfDay(for: Date())
-    @State private var calendarMonth: Date = Calendar.current.startOfMonth(for: Date())
+    @State private var showCopyFromDateSheet = false
+    /// 前回の記録から自動入力されたエントリのID（調整を促すキャプション表示用）
+    @State private var prefilledEntryIds: Set<UUID> = []
 
     private var isEditMode: Bool { editingSession != nil }
 
+    private var prefillService: WorkoutPrefillService {
+        WorkoutPrefillService(context: modelContext)
+    }
+
     var body: some View {
         NavigationStack {
-            List {
-                if !isEditMode {
-                    copyLastSessionSection
+            Group {
+                if !isEditMode && exercises.isEmpty {
+                    WorkoutEntryStartView(
+                        lastSessionDate: prefillService.mostRecentSessionDate(before: date),
+                        onCopyLastSession: copyLastSession,
+                        onPickExercise: { showExercisePicker = true },
+                        onCopyFromDate: { showCopyFromDateSheet = true }
+                    )
+                } else {
+                    List {
+                        ForEach($exercises) { $entry in
+                            exerciseSection(entry: $entry)
+                        }
+                        addExerciseSection
+                        memoSection
+                    }
                 }
-                ForEach($exercises) { $entry in
-                    exerciseSection(entry: $entry)
-                }
-                addExerciseSection
-                memoSection
             }
             .navigationTitle(isEditMode ? "記録を編集" : "筋トレ記録")
             .navigationBarTitleDisplayMode(.inline)
@@ -60,6 +57,11 @@ struct WorkoutRecordSheet: View {
                     showExercisePicker = false
                 }
             }
+            .sheet(isPresented: $showCopyFromDateSheet) {
+                CopyFromDateSheet { entries in
+                    exercises = entries
+                }
+            }
             .onAppear {
                 if let session = editingSession {
                     loadSession(session)
@@ -69,171 +71,6 @@ struct WorkoutRecordSheet: View {
     }
 
     // MARK: - Sections
-
-    @ViewBuilder
-    private var copyLastSessionSection: some View {
-        Section("メニューをコピー") {
-            copyCalendarView
-
-            // その日の全セッションを集約（1日複数回に分けて保存した場合も全種目表示）
-            let sessionsForDate = fetchSessions(for: copyDate)
-            let allSets = sessionsForDate.flatMap { loadSets(for: $0) }
-            let names = Array(Set(allSets.compactMap { $0.exercise?.name })).sorted()
-
-            if names.isEmpty {
-                Text("この日の記録はありません")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(names, id: \.self) { name in
-                    Label(name, systemImage: "dumbbell.fill")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Button {
-                    copySessions(sessionsForDate)
-                } label: {
-                    Label("このメニューをコピー", systemImage: "doc.on.doc")
-                }
-                .foregroundStyle(Color.accentColor)
-            }
-        }
-    }
-
-    // MARK: - Copy Calendar
-
-    private var copyCalendarView: some View {
-        VStack(spacing: 8) {
-            // 月ヘッダー
-            HStack {
-                Button {
-                    calendarMonth = Calendar.current.date(byAdding: .month, value: -1, to: calendarMonth) ?? calendarMonth
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                Spacer()
-                Text(copyCalendarMonthTitle)
-                    .font(.subheadline.bold())
-                Spacer()
-                Button {
-                    let next = Calendar.current.date(byAdding: .month, value: 1, to: calendarMonth) ?? calendarMonth
-                    if next <= Calendar.current.startOfMonth(for: Date()) {
-                        calendarMonth = next
-                    }
-                } label: {
-                    Image(systemName: "chevron.right")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-
-            // LazyVGrid は List 内で recursive layout loop を起こすため
-            // VStack + HStack の明示的な行レイアウトを使用
-            VStack(spacing: 4) {
-                // 曜日ヘッダー行
-                HStack(spacing: 0) {
-                    ForEach(["月", "火", "水", "木", "金", "土", "日"], id: \.self) { wd in
-                        Text(wd)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                // 日付を7列の行に分割して描画
-                let days = paddedCalendarDays
-                let rowCount = days.count / 7
-                ForEach(0..<rowCount, id: \.self) { row in
-                    HStack(spacing: 0) {
-                        ForEach(0..<7) { col in
-                            let item = days[row * 7 + col]
-                            Group {
-                                if let day = item {
-                                    copyDayCell(for: day)
-                                } else {
-                                    Color.clear.frame(height: 32)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                    }
-                }
-            }
-        }
-        .padding(.vertical, 4)
-    }
-
-    private func copyDayCell(for date: Date) -> some View {
-        let hasSession = sessionDates.contains(Calendar.current.startOfDay(for: date))
-        let isSelected = Calendar.current.isDate(date, inSameDayAs: copyDate)
-        let isFuture = date > Date()
-        return Button {
-            if !isFuture {
-                copyDate = Calendar.current.startOfDay(for: date)
-            }
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(isSelected ? Color.accentColor : Color.clear)
-                    .frame(width: 30, height: 30)
-                VStack(spacing: 2) {
-                    Text("\(Calendar.current.component(.day, from: date))")
-                        .font(.caption)
-                        .foregroundStyle(
-                            isFuture ? Color.secondary.opacity(0.4)
-                            : isSelected ? .white
-                            : .primary
-                        )
-                    Circle()
-                        .fill(
-                            hasSession
-                            ? (isSelected ? Color.white : Color.accentColor)
-                            : Color.clear
-                        )
-                        .frame(width: 4, height: 4)
-                }
-            }
-        }
-        .disabled(isFuture)
-        .buttonStyle(.plain)
-    }
-
-    private var copyCalendarDays: [Date?] {
-        let calendar = Calendar.current
-        guard let range = calendar.range(of: .day, in: .month, for: calendarMonth) else { return [] }
-        let weekday = calendar.component(.weekday, from: calendarMonth)
-        let offset = (weekday - 2 + 7) % 7
-        var days: [Date?] = Array(repeating: nil, count: offset)
-        for day in range {
-            if let date = calendar.date(byAdding: .day, value: day - 1, to: calendarMonth) {
-                days.append(date)
-            }
-        }
-        return days
-    }
-
-    /// VStack+HStack レイアウト用に7の倍数へパディングした配列
-    private var paddedCalendarDays: [Date?] {
-        var days = copyCalendarDays
-        let remainder = days.count % 7
-        if remainder != 0 {
-            days += Array(repeating: nil, count: 7 - remainder)
-        }
-        return days
-    }
-
-    /// セッションが存在する日付（startOfDay）のセットをキャッシュ
-    private var sessionDates: Set<Date> {
-        Set(allSessions.map { Calendar.current.startOfDay(for: $0.date) })
-    }
-
-    private var copyCalendarMonthTitle: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy年M月"
-        formatter.locale = Locale(identifier: "ja_JP")
-        return formatter.string(from: calendarMonth)
-    }
 
     private var addExerciseSection: some View {
         Section {
@@ -254,8 +91,14 @@ struct WorkoutRecordSheet: View {
 
     @ViewBuilder
     private func exerciseSection(entry: Binding<WorkoutExerciseEntry>) -> some View {
-        let previousSets = fetchPreviousSets(for: entry.wrappedValue.exercise)
+        let previousSets = prefillService.previousSets(for: entry.wrappedValue.exercise)
         Section {
+            if prefilledEntryIds.contains(entry.wrappedValue.id) {
+                Label("前回の記録を自動入力しました。数値を調整してください", systemImage: "wand.and.stars")
+                    .font(.caption)
+                    .foregroundStyle(Color.accentColor)
+            }
+
             // 前回の記録サマリー + コピーボタン
             if !previousSets.isEmpty {
                 HStack(alignment: .top, spacing: 8) {
@@ -342,10 +185,24 @@ struct WorkoutRecordSheet: View {
 
     // MARK: - Actions
 
+    /// 種目を追加する。前回の記録があればセット内容を自動入力する。
     private func addExercise(_ exercise: Exercise) {
-        exercises.append(WorkoutExerciseEntry(exercise: exercise, sets: [
-            WorkoutSetEntry(setNumber: 1, weight: 0, reps: 0)
-        ]))
+        let prefilled = prefillService.latestEntries(for: exercise)
+        if prefilled.isEmpty {
+            exercises.append(WorkoutExerciseEntry(exercise: exercise, sets: [
+                WorkoutSetEntry(setNumber: 1, weight: 0, reps: 0)
+            ]))
+        } else {
+            let entry = WorkoutExerciseEntry(exercise: exercise, sets: prefilled)
+            exercises.append(entry)
+            prefilledEntryIds.insert(entry.id)
+        }
+    }
+
+    /// 直近のトレーニング日のメニュー全体を読み込む
+    private func copyLastSession() {
+        guard let lastDate = prefillService.mostRecentSessionDate(before: date) else { return }
+        exercises = prefillService.entries(for: lastDate)
     }
 
     private func addSet(to entry: Binding<WorkoutExerciseEntry>) {
@@ -365,28 +222,7 @@ struct WorkoutRecordSheet: View {
 
     private func loadSession(_ session: WorkoutSession) {
         sessionMemo = session.memo
-        exercises.removeAll()
-
-        var exerciseOrder: [UUID] = []
-        var setsByExercise: [UUID: [WorkoutSet]] = [:]
-
-        for set in loadSets(for: session) {
-            guard let exerciseId = set.exercise?.id else { continue }
-            if setsByExercise[exerciseId] == nil {
-                setsByExercise[exerciseId] = []
-                exerciseOrder.append(exerciseId)
-            }
-            setsByExercise[exerciseId]?.append(set)
-        }
-
-        for exerciseId in exerciseOrder {
-            guard let sets = setsByExercise[exerciseId],
-                  let exercise = sets.first?.exercise else { continue }
-            let entries = sets.sorted { $0.setNumber < $1.setNumber }.enumerated().map { idx, set in
-                WorkoutSetEntry(setNumber: idx + 1, weight: set.weight, reps: set.reps)
-            }
-            exercises.append(WorkoutExerciseEntry(exercise: exercise, sets: entries))
-        }
+        exercises = prefillService.entries(from: [session])
     }
 
     private func saveExercise(_ entry: WorkoutExerciseEntry) {
@@ -413,7 +249,7 @@ struct WorkoutRecordSheet: View {
     private func saveSession() {
         if let session = editingSession {
             // 編集モード: 既存のセットを削除して再作成
-            for set in loadSets(for: session) { modelContext.delete(set) }
+            for set in prefillService.loadSets(for: session) { modelContext.delete(set) }
             session.memo = sessionMemo
             var totalVolume = 0.0
             for entry in exercises {
@@ -454,72 +290,10 @@ struct WorkoutRecordSheet: View {
         dismiss()
     }
 
-    // MARK: - Fetch Helpers
-
     private static func fmtWeight(_ w: Double) -> String {
         w.truncatingRemainder(dividingBy: 1) == 0
             ? String(format: "%.0f", w)
             : String(format: "%.1f", w)
-    }
-
-    /// 指定日の全セッションを返す（1日複数セッション対応）
-    private func fetchSessions(for date: Date) -> [WorkoutSession] {
-        let start = Calendar.current.startOfDay(for: date)
-        let end = Calendar.current.date(byAdding: .day, value: 1, to: start) ?? start
-        let descriptor = FetchDescriptor<WorkoutSession>(
-            predicate: #Predicate { $0.date >= start && $0.date < end },
-            sortBy: [SortDescriptor(\.date)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
-    }
-
-    private func fetchPreviousSets(for exercise: Exercise) -> [WorkoutSet] {
-        let exerciseId = exercise.id
-        let descriptor = FetchDescriptor<WorkoutSet>(
-            predicate: #Predicate { $0.exercise?.id == exerciseId },
-            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-        )
-        let allSets = (try? modelContext.fetch(descriptor)) ?? []
-        guard let lastSession = allSets.first?.session else { return [] }
-        let lastSessionId = lastSession.id
-        return allSets.filter { $0.session?.id == lastSessionId }
-            .sorted { $0.setNumber < $1.setNumber }
-    }
-
-    /// セッションに紐づく全セットをメモリフィルターで確実に取得する
-    /// （predicate の optional chaining や session.sets のレイジーロードに依存しない）
-    private func loadSets(for session: WorkoutSession) -> [WorkoutSet] {
-        let sessionId = session.id
-        let all = (try? modelContext.fetch(FetchDescriptor<WorkoutSet>())) ?? []
-        let filtered = all
-            .filter { $0.session?.id == sessionId }
-            .sorted { $0.setNumber < $1.setNumber }
-        return filtered.isEmpty
-            ? session.sets.sorted { $0.setNumber < $1.setNumber }
-            : filtered
-    }
-
-    /// 指定日の全セッションから種目・セットをまとめてコピーする
-    private func copySessions(_ sessions: [WorkoutSession]) {
-        exercises.removeAll()
-        var exerciseOrder: [UUID] = []
-        var setsByExercise: [UUID: [WorkoutSet]] = [:]
-        for set in sessions.flatMap({ loadSets(for: $0) }) {
-            guard let exerciseId = set.exercise?.id else { continue }
-            if setsByExercise[exerciseId] == nil {
-                setsByExercise[exerciseId] = []
-                exerciseOrder.append(exerciseId)
-            }
-            setsByExercise[exerciseId]?.append(set)
-        }
-        for exerciseId in exerciseOrder {
-            guard let sets = setsByExercise[exerciseId],
-                  let exercise = sets.first?.exercise else { continue }
-            let entries = sets.sorted { $0.setNumber < $1.setNumber }.enumerated().map { idx, set in
-                WorkoutSetEntry(setNumber: idx + 1, weight: set.weight, reps: set.reps)
-            }
-            exercises.append(WorkoutExerciseEntry(exercise: exercise, sets: entries))
-        }
     }
 }
 
