@@ -92,7 +92,10 @@ struct MealRecordSheet: View {
                 Button("キャンセル", role: .cancel) {}
             }
             .sheet(isPresented: $showAIConsent) {
-                AIConsentSheet(providerName: viewModel.currentProviderDescription(context: modelContext)) {
+                AIConsentSheet(
+                    providerName: viewModel.currentProviderDescription(context: modelContext),
+                    isOnDevice: viewModel.isOnDeviceProvider(context: modelContext)
+                ) {
                     hasAIConsent = true
                     showAIConsent = false
                     Task { await viewModel.estimatePFC(context: modelContext) }

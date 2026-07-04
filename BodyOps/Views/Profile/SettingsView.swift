@@ -147,10 +147,17 @@ struct SettingsView: View {
         }
     }
 
+    /// 選択可能なプロバイダー。Apple IntelligenceはOSが対応している場合のみ表示する。
+    private var selectableProviders: [LLMProvider] {
+        LLMProvider.allCases.filter { provider in
+            provider != .appleOnDevice || OnDeviceAvailability.check() != .unsupportedOS
+        }
+    }
+
     private var llmSection: some View {
         Section {
             Picker("プロバイダー", selection: $selectedProvider) {
-                ForEach(LLMProvider.allCases, id: \.self) { provider in
+                ForEach(selectableProviders, id: \.self) { provider in
                     Text(provider.displayName).tag(provider)
                 }
             }
@@ -161,53 +168,71 @@ struct SettingsView: View {
                 persistAISettingsWithoutAlert()
             }
 
-            modelPickerRow
+            if selectedProvider == .appleOnDevice {
+                onDeviceStatusRow
+            } else {
+                modelPickerRow
 
-            modelRefreshRow
+                modelRefreshRow
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("APIキー")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                SecureField("sk-...", text: $apiKeyInput)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .focused($isAPIKeyFocused)
-                    .onSubmit {
-                        persistAISettingsWithoutAlert()
-                    }
-                    .onChange(of: isAPIKeyFocused) { wasFocused, isFocused in
-                        if wasFocused && !isFocused {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("APIキー")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    SecureField("sk-...", text: $apiKeyInput)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .focused($isAPIKeyFocused)
+                        .onSubmit {
                             persistAISettingsWithoutAlert()
                         }
-                    }
-                Text("APIキーとAI設定は自動保存されます。接続テストは任意です。")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
+                        .onChange(of: isAPIKeyFocused) { wasFocused, isFocused in
+                            if wasFocused && !isFocused {
+                                persistAISettingsWithoutAlert()
+                            }
+                        }
+                    Text("APIキーとAI設定は自動保存されます。接続テストは任意です。")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
 
-            Button {
-                Task { await testConnection() }
-            } label: {
-                HStack {
-                    Text("接続テスト")
-                    if isTestingConnection {
-                        ProgressView()
-                            .scaleEffect(0.8)
+                Button {
+                    Task { await testConnection() }
+                } label: {
+                    HStack {
+                        Text("接続テスト")
+                        if isTestingConnection {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
                     }
                 }
-            }
-            .disabled(isTestingConnection || apiKeyInput.isEmpty)
+                .disabled(isTestingConnection || apiKeyInput.isEmpty)
 
-            if !connectionTestResult.isEmpty {
-                Text(connectionTestResult)
-                    .font(.caption)
-                    .foregroundStyle(connectionTestResult.contains("成功") ? .green : .red)
+                if !connectionTestResult.isEmpty {
+                    Text(connectionTestResult)
+                        .font(.caption)
+                        .foregroundStyle(connectionTestResult.contains("成功") ? .green : .red)
+                }
             }
         } header: {
             Text("AIプロバイダー")
         } footer: {
-            Text("チャット時は入力内容・添付画像・プロフィール・目標・直近の筋トレ/食事記録を選択中のプロバイダーへ送信します。")
+            if selectedProvider == .appleOnDevice {
+                Text("オンデバイスAIは無料で、データが端末外に送信されません。画像解析（チャットの画像添付・食事写真からの推定）には対応していません。")
+            } else {
+                Text("チャット時は入力内容・添付画像・プロフィール・目標・直近の筋トレ/食事記録を選択中のプロバイダーへ送信します。")
+            }
+        }
+    }
+
+    private var onDeviceStatusRow: some View {
+        let availability = OnDeviceAvailability.check()
+        return HStack(spacing: 8) {
+            Image(systemName: availability.isAvailable ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .foregroundStyle(availability.isAvailable ? .green : .orange)
+            Text(availability.statusDescription)
+                .font(.subheadline)
         }
     }
 
@@ -267,7 +292,9 @@ struct SettingsView: View {
                 Text("AIチャットや食事AI推定では、入力内容・添付画像・プロフィール・目標・制約・直近の筋トレ/食事記録を、選択中のAIプロバイダーへ送信する場合があります。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("送信先: \(selectedProvider.displayName)")
+                Text(selectedProvider == .appleOnDevice
+                     ? "処理場所: 端末内（Apple Intelligence・外部送信なし）"
+                     : "送信先: \(selectedProvider.displayName)")
                     .font(.caption)
                 Text("APIキーは端末内のiOS Keychainに保存され、開発者のサーバーには保存されません。AI同意を取り消しても、通常の記録機能は利用できます。")
                     .font(.caption)
@@ -546,6 +573,12 @@ struct SettingsView: View {
     }
 
     private func loadModelOptions(for provider: LLMProvider, preferredModel: String?) {
+        // オンデバイスはモデル選択なし（固定）
+        if provider == .appleOnDevice {
+            availableModels = []
+            modelName = provider.defaultModel
+            return
+        }
         availableModels = ModelListService.shared.cachedModels(for: provider)
         if let preferredModel, availableModels.contains(preferredModel) {
             modelName = preferredModel

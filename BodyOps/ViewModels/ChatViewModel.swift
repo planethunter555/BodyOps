@@ -25,7 +25,6 @@ final class ChatViewModel {
 
     // MARK: - Private
     private var context: ModelContext?
-    private let llmService = LLMAPIService()
     private var streamTask: Task<Void, Never>?
     private var hasPruned = false
     private static let sessionTagKey = "currentChatSessionTag"
@@ -58,8 +57,22 @@ final class ChatViewModel {
     }
 
     func refreshConfigurationState() {
-        let setting = fetchLLMSetting()
-        hasConfiguredAPIKey = KeychainService.shared.load(forProvider: setting.provider) != nil
+        hasConfiguredAPIKey = AIClient(setting: fetchLLMSetting()).isConfigured
+    }
+
+    /// 現在のプロバイダーが画像入力に対応しているか
+    var supportsImageInput: Bool {
+        AIClient(setting: fetchLLMSetting()).supportsVision
+    }
+
+    /// 現在のプロバイダーがオンデバイス（データを端末外へ送信しない）か
+    var isOnDeviceProvider: Bool {
+        fetchLLMSetting().provider == .appleOnDevice
+    }
+
+    /// 未設定時にバナーへ表示する案内文
+    var configurationHint: String {
+        AIClient(setting: fetchLLMSetting()).configurationHint
     }
 
     // MARK: - Send Message
@@ -79,12 +92,13 @@ final class ChatViewModel {
         guard !text.isEmpty || pendingImageData != nil else { return }
         guard let context else { return }
 
-        // APIキー確認
+        // 送信可能か確認（クラウド: APIキー / オンデバイス: モデル利用可否）
         let setting = fetchLLMSetting()
+        let client = AIClient(setting: setting)
         let apiKey = KeychainService.shared.load(forProvider: setting.provider) ?? ""
-        guard !apiKey.isEmpty else {
+        guard client.isConfigured else {
             hasConfiguredAPIKey = false
-            errorMessage = "APIキーが設定されていません。設定タブで入力してください。"
+            errorMessage = client.configurationHint
             return
         }
         hasConfiguredAPIKey = true
@@ -95,8 +109,14 @@ final class ChatViewModel {
         errorMessage = nil
 
         // 履歴は今回のメッセージを保存する前に取得する（重複送信を防ぐ）
-        let systemPrompt = buildSystemPrompt(context: context)
-        let apiMessages = buildAPIMessages(currentText: text, imageData: imageData, context: context)
+        // オンデバイスはコンテキストが小さいためプロンプトをコンパクト化し履歴を絞る
+        let systemPrompt = SystemPromptBuilder(context: context).build(compact: client.isOnDevice)
+        let apiMessages = buildAPIMessages(
+            currentText: text,
+            imageData: client.supportsVision ? imageData : nil,
+            historyLimit: client.isOnDevice ? 4 : 8,
+            context: context
+        )
 
         // ユーザーメッセージをUI＆DBに追加
         let userBubble = ChatBubbleItem(role: "user", content: text, imageData: imageData)
@@ -123,12 +143,10 @@ final class ChatViewModel {
         var usageOutput = 0
 
         do {
-            let stream = llmService.streamMessage(
+            let stream = client.stream(
                 messages: apiMessages,
                 system: systemPrompt,
-                provider: setting.provider,
-                apiKey: apiKey,
-                modelName: setting.modelName
+                apiKey: apiKey
             )
             for try await event in stream {
                 switch event {
@@ -217,21 +235,17 @@ final class ChatViewModel {
 
     // MARK: - Context Building
 
-    private func buildSystemPrompt(context: ModelContext) -> String {
-        SystemPromptBuilder(context: context).build()
-    }
-
     /// デバッグ用: 現在のシステムプロンプトを返す
     func previewSystemPrompt() -> String {
         guard let context else { return "（コンテキスト未設定）" }
         return SystemPromptBuilder(context: context).build()
     }
 
-    private func buildAPIMessages(currentText: String, imageData: Data?, context: ModelContext) -> [LLMMessage] {
+    private func buildAPIMessages(currentText: String, imageData: Data?, historyLimit: Int = 8, context: ModelContext) -> [LLMMessage] {
         var result: [LLMMessage] = []
 
         // 現在のセッションの直近履歴（画像は除外してテキストのみ送信 - メモリ節約）
-        let history = fetchSessionHistory(context: context)
+        let history = fetchSessionHistory(limit: historyLimit, context: context)
         for msg in history {
             result.append(LLMMessage(role: msg.role, content: msg.content, imageData: nil))
         }
@@ -249,16 +263,16 @@ final class ChatViewModel {
         return (try? LLMSettingsStore.current(in: context)) ?? LLMSetting()
     }
 
-    /// LLMに渡す会話コンテキスト。現在のセッション内の直近8件に限定する
+    /// LLMに渡す会話コンテキスト。現在のセッション内の直近N件に限定する
     /// （セッションをまたぐと文脈が混ざるため、セッション内スコープとする）
-    private func fetchSessionHistory(context: ModelContext) -> [ChatMessage] {
+    private func fetchSessionHistory(limit: Int, context: ModelContext) -> [ChatMessage] {
         let tag = currentSessionTag
         let descriptor = FetchDescriptor<ChatMessage>(
             predicate: #Predicate { $0.sessionTag == tag },
             sortBy: [SortDescriptor(\.createdAt)]
         )
         let all = (try? context.fetch(descriptor)) ?? []
-        return Array(all.suffix(8))
+        return Array(all.suffix(limit))
     }
 
     // MARK: - Persistence

@@ -12,7 +12,9 @@ struct SystemPromptBuilder {
 
     // MARK: - Public: Full Prompt
 
-    func build() -> String {
+    /// - Parameter compact: オンデバイスLLMなどコンテキストが小さい場合にtrue。
+    ///   記録の量を絞り、食事記録を省略する。
+    func build(compact: Bool = false) -> String {
         let profile = fetchProfile()
         var parts: [String] = []
 
@@ -38,15 +40,17 @@ struct SystemPromptBuilder {
         }
 
         // トレーニング記録
-        let workoutSection = buildWorkoutSection()
+        let workoutSection = buildWorkoutSection(sessionLimit: compact ? 3 : 10)
         if !workoutSection.isEmpty {
             parts.append(workoutSection)
         }
 
-        // 食事記録
-        let mealSection = buildMealSection()
-        if !mealSection.isEmpty {
-            parts.append(mealSection)
+        // 食事記録（コンパクト時は省略）
+        if !compact {
+            let mealSection = buildMealSection()
+            if !mealSection.isEmpty {
+                parts.append(mealSection)
+            }
         }
 
         // ルール
@@ -57,11 +61,11 @@ struct SystemPromptBuilder {
 
     // MARK: - Public: Sections (for testing and debug)
 
-    func buildWorkoutSection() -> String {
+    func buildWorkoutSection(sessionLimit: Int = 10) -> String {
         var sessionDescriptor = FetchDescriptor<WorkoutSession>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        sessionDescriptor.fetchLimit = 10
+        sessionDescriptor.fetchLimit = sessionLimit
         let sessions = (try? context.fetch(sessionDescriptor)) ?? []
         guard !sessions.isEmpty else { return "" }
 

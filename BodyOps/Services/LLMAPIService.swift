@@ -92,6 +92,10 @@ final class LLMAPIService: @unchecked Sendable {
             let model = modelName.isEmpty ? LLMProvider.gemini.defaultModel : modelName
             // swiftlint:disable:next force_unwrapping
             return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent?alt=sse")!
+        case .appleOnDevice:
+            // オンデバイスはAIClientでルーティングされるため到達しない
+            // swiftlint:disable:next force_unwrapping
+            return URL(string: "about:blank")!
         }
     }
 
@@ -260,6 +264,8 @@ final class LLMAPIService: @unchecked Sendable {
                     output: meta["candidatesTokenCount"] as? Int ?? 0
                 ))
             }
+        case .appleOnDevice:
+            break  // オンデバイスはSSEを使わない（到達しない）
         }
         return events
     }
@@ -278,6 +284,9 @@ final class LLMAPIService: @unchecked Sendable {
             return try buildOpenAIBody(messages: messages, system: system, modelName: modelName, stream: stream)
         case .gemini:
             return try buildGeminiBody(messages: messages, system: system)
+        case .appleOnDevice:
+            // オンデバイスはAIClientでルーティングされるため到達しない
+            throw LLMError.serverError
         }
     }
 
@@ -322,6 +331,10 @@ final class LLMAPIService: @unchecked Sendable {
             let model = modelName.isEmpty ? "gemini-2.0-flash" : modelName
             // swiftlint:disable:next force_unwrapping
             return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent")!
+        case .appleOnDevice:
+            // オンデバイスはAIClientでルーティングされるため到達しない
+            // swiftlint:disable:next force_unwrapping
+            return URL(string: "about:blank")!
         }
     }
 
@@ -357,6 +370,8 @@ final class LLMAPIService: @unchecked Sendable {
             return (text,
                     meta?["promptTokenCount"] as? Int ?? 0,
                     meta?["candidatesTokenCount"] as? Int ?? 0)
+        case .appleOnDevice:
+            throw LLMError.serverError
         }
     }
 
@@ -376,6 +391,8 @@ final class LLMAPIService: @unchecked Sendable {
             queryItems.append(URLQueryItem(name: "key", value: apiKey))
             components?.queryItems = queryItems
             request.url = components?.url
+        case .appleOnDevice:
+            break  // 認証不要（到達しない）
         }
     }
 
@@ -523,6 +540,8 @@ final class LLMAPIService: @unchecked Sendable {
                     inputTokens = meta["promptTokenCount"] as? Int ?? inputTokens
                     outputTokens = meta["candidatesTokenCount"] as? Int ?? outputTokens
                 }
+            case .appleOnDevice:
+                break  // オンデバイスはSSEを使わない（到達しない）
             }
         }
         return (chunks, inputTokens, outputTokens)

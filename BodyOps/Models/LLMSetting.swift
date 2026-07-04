@@ -5,12 +5,16 @@ enum LLMProvider: String, CaseIterable, Codable {
     case claude
     case openai
     case gemini
+    /// Apple Intelligence（FoundationModels）によるオンデバイス推論。
+    /// APIキー不要・無料・データは端末外へ送信されない。iOS 26+の対応端末のみ。
+    case appleOnDevice
 
     var displayName: String {
         switch self {
         case .claude: return "Claude (Anthropic)"
         case .openai: return "ChatGPT (OpenAI)"
         case .gemini: return "Gemini (Google)"
+        case .appleOnDevice: return "Apple Intelligence（オンデバイス・無料）"
         }
     }
 
@@ -19,6 +23,7 @@ enum LLMProvider: String, CaseIterable, Codable {
         case .claude: return "claude-sonnet-5"
         case .openai: return "gpt-5-mini"
         case .gemini: return "gemini-2.5-flash"
+        case .appleOnDevice: return "on-device"
         }
     }
 
@@ -54,6 +59,8 @@ enum LLMProvider: String, CaseIterable, Codable {
                 "gemini-2.0-flash",
                 "gemini-2.0-flash-lite"
             ]
+        case .appleOnDevice:
+            return []
         }
     }
 

@@ -86,6 +86,14 @@ final class MealRecordViewModel {
         guard !trimmed.isEmpty || imageData != nil else { return }
 
         let setting = fetchLLMSetting(context: context)
+        let client = AIClient(setting: setting)
+
+        // オンデバイスAIは画像解析非対応・guided generationで推定する
+        if client.isOnDevice {
+            await estimateOnDevice(description: trimmed)
+            return
+        }
+
         let apiKey = KeychainService.shared.load(forProvider: setting.provider) ?? ""
         guard !apiKey.isEmpty else {
             estimationError = "APIキーが設定されていません。設定タブで入力してください。"
@@ -124,8 +132,47 @@ final class MealRecordViewModel {
         }
     }
 
+    /// Apple Intelligence（オンデバイス）による推定。テキストのみ対応。
+    private func estimateOnDevice(description: String) async {
+        guard !description.isEmpty else {
+            estimationError = "Apple Intelligence（オンデバイス）は画像解析に対応していません。食事内容をテキストで入力してください。写真はメモとして保存されます。"
+            return
+        }
+
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            guard OnDeviceAvailability.check().isAvailable else {
+                estimationError = "Apple Intelligenceが利用できません。\(OnDeviceAvailability.check().statusDescription)"
+                return
+            }
+            isEstimating = true
+            estimationError = nil
+            estimationSucceeded = false
+            defer { isEstimating = false }
+
+            do {
+                let result = try await OnDeviceLLMService().estimateMeal(description: description)
+                calories = result.calories
+                protein = result.protein
+                fat = result.fat
+                carbs = result.carbs
+                estimationDetails = EstimationDetails(items: [], summary: result.summary)
+                estimationSucceeded = true
+            } catch {
+                estimationError = "オンデバイスAIが応答できませんでした。クラウドAIをお試しください。"
+            }
+            return
+        }
+        #endif
+        estimationError = "この端末ではオンデバイスAIを利用できません。設定でクラウドAIを選択してください。"
+    }
+
     func currentProviderDescription(context: ModelContext) -> String {
         fetchLLMSetting(context: context).provider.displayName
+    }
+
+    func isOnDeviceProvider(context: ModelContext) -> Bool {
+        fetchLLMSetting(context: context).provider == .appleOnDevice
     }
 
     func load(from meal: MealRecord) {

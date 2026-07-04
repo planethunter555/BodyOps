@@ -57,7 +57,10 @@ struct AIChatView: View {
                 loadPhoto(item)
             }
             .sheet(isPresented: $showAIConsent) {
-                AIConsentSheet(providerName: viewModel.currentProviderDescription) {
+                AIConsentSheet(
+                    providerName: viewModel.currentProviderDescription,
+                    isOnDevice: viewModel.isOnDeviceProvider
+                ) {
                     hasAIConsent = true
                     showAIConsent = false
                     viewModel.send()
@@ -75,9 +78,9 @@ struct AIChatView: View {
             Image(systemName: "key.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
-            Text("APIキーが設定されていません")
+            Text("AIプロバイダーが利用できません")
                 .font(.headline)
-            Text("設定タブでLLMプロバイダーとAPIキーを設定してください。")
+            Text(viewModel.configurationHint)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -161,11 +164,14 @@ struct AIChatView: View {
                 pendingImagePreview(uiImage: uiImage)
             }
             HStack(alignment: .bottom, spacing: 8) {
-                PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 36, height: 36)
+                // オンデバイスAIは画像解析非対応のため添付ボタンを隠す
+                if viewModel.supportsImageInput {
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 36, height: 36)
+                    }
                 }
 
                 TextField("メッセージを入力...", text: $viewModel.inputText, axis: .vertical)

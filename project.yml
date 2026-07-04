@@ -27,6 +27,8 @@ targets:
         INFOPLIST_FILE: BodyOps/Resources/Info.plist
         DEVELOPMENT_TEAM: ""
         SWIFT_EMIT_LOC_STRINGS: YES
+        # FoundationModels(iOS 26+)は #if canImport + @available ガードにより
+        # iOS 26 SDKビルド時に自動でweak linkされる（明示フラグは旧SDKでリンクエラーになるため付けない）
     entitlements:
       path: BodyOps/Resources/BodyOps.entitlements
 
