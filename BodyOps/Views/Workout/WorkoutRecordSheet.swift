@@ -33,7 +33,13 @@ struct WorkoutRecordSheet: View {
                 } else {
                     List {
                         ForEach($exercises) { $entry in
-                            exerciseSection(entry: $entry)
+                            ExerciseEntrySection(
+                                entry: $entry,
+                                previousSets: prefillService.previousSets(for: entry.exercise),
+                                showsPrefilledHint: prefilledEntryIds.contains(entry.id),
+                                isEditMode: isEditMode,
+                                onSaveExercise: { saveExercise(entry) }
+                            )
                         }
                         addExerciseSection
                         memoSection
@@ -89,100 +95,6 @@ struct WorkoutRecordSheet: View {
         }
     }
 
-    @ViewBuilder
-    private func exerciseSection(entry: Binding<WorkoutExerciseEntry>) -> some View {
-        let previousSets = prefillService.previousSets(for: entry.wrappedValue.exercise)
-        Section {
-            if prefilledEntryIds.contains(entry.wrappedValue.id) {
-                Label("前回の記録を自動入力しました。数値を調整してください", systemImage: "wand.and.stars")
-                    .font(.caption)
-                    .foregroundStyle(Color.accentColor)
-            }
-
-            // 前回の記録サマリー + コピーボタン
-            if !previousSets.isEmpty {
-                HStack(alignment: .top, spacing: 8) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("前回の記録")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
-                        ForEach(previousSets, id: \.id) { set in
-                            Text("Set\(set.setNumber):  \(Self.fmtWeight(set.weight))kg × \(set.reps)回")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
-                    Spacer()
-                    Button("前回をコピー") {
-                        entry.sets.wrappedValue = previousSets.enumerated().map { idx, s in
-                            WorkoutSetEntry(setNumber: idx + 1, weight: s.weight, reps: s.reps)
-                        }
-                    }
-                    .font(.caption)
-                    .buttonStyle(.bordered)
-                }
-                .padding(.vertical, 2)
-            }
-
-            ForEach(entry.sets.indices, id: \.self) { index in
-                SetInputRow(
-                    setNumber: entry.sets[index].wrappedValue.setNumber,
-                    weight: entry.sets[index].wrappedValue.weight,
-                    reps: entry.sets[index].wrappedValue.reps,
-                    previousWeight: index < previousSets.count ? previousSets[index].weight : nil,
-                    previousReps: index < previousSets.count ? previousSets[index].reps : nil,
-                    onUpdate: { weight, reps in
-                        entry.sets[index].wrappedValue.weight = weight
-                        entry.sets[index].wrappedValue.reps = reps
-                    }
-                )
-                .id(entry.sets[index].wrappedValue.id)
-            }
-            .onDelete { indexSet in
-                entry.sets.wrappedValue.remove(atOffsets: indexSet)
-                renumberSets(in: entry)
-            }
-
-            Button {
-                addSet(to: entry)
-            } label: {
-                Label("+ セット追加", systemImage: "plus")
-                    .font(.subheadline)
-            }
-
-            HStack {
-                Text("合計ボリューム")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(String(format: "%.0f kg", entry.wrappedValue.totalVolume))
-                    .font(.caption.bold())
-                    .foregroundStyle(.secondary)
-            }
-
-            if !isEditMode {
-                Button {
-                    saveExercise(entry.wrappedValue)
-                } label: {
-                    Label("この種目を保存", systemImage: "checkmark.circle.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .disabled(entry.wrappedValue.sets.isEmpty)
-                .buttonStyle(.borderedProminent)
-                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 8, trailing: 16))
-            }
-        } header: {
-            HStack {
-                Text(entry.wrappedValue.exercise.name)
-                    .font(.subheadline.bold())
-                Spacer()
-                Text(entry.wrappedValue.exercise.category)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
-
     // MARK: - Actions
 
     /// 種目を追加する。前回の記録があればセット内容を自動入力する。
@@ -203,21 +115,6 @@ struct WorkoutRecordSheet: View {
     private func copyLastSession() {
         guard let lastDate = prefillService.mostRecentSessionDate(before: date) else { return }
         exercises = prefillService.entries(for: lastDate)
-    }
-
-    private func addSet(to entry: Binding<WorkoutExerciseEntry>) {
-        let last = entry.wrappedValue.sets.last
-        entry.sets.wrappedValue.append(WorkoutSetEntry(
-            setNumber: entry.wrappedValue.sets.count + 1,
-            weight: last?.weight ?? 0,
-            reps: last?.reps ?? 0
-        ))
-    }
-
-    private func renumberSets(in entry: Binding<WorkoutExerciseEntry>) {
-        for index in entry.sets.wrappedValue.indices {
-            entry.sets.wrappedValue[index].setNumber = index + 1
-        }
     }
 
     private func loadSession(_ session: WorkoutSession) {
@@ -290,126 +187,4 @@ struct WorkoutRecordSheet: View {
         dismiss()
     }
 
-    private static func fmtWeight(_ w: Double) -> String {
-        w.truncatingRemainder(dividingBy: 1) == 0
-            ? String(format: "%.0f", w)
-            : String(format: "%.1f", w)
-    }
-}
-
-// MARK: - SetInputRow
-
-struct SetInputRow: View {
-    let setNumber: Int
-    let previousWeight: Double?
-    let previousReps: Int?
-    let onUpdate: (Double, Int) -> Void
-
-    @State private var weight: Double
-    @State private var reps: Int
-    @State private var weightText: String
-    @State private var repsText: String
-
-    init(setNumber: Int, weight: Double, reps: Int,
-         previousWeight: Double?, previousReps: Int?,
-         onUpdate: @escaping (Double, Int) -> Void) {
-        self.setNumber = setNumber
-        self._weight = State(initialValue: weight)
-        self._reps = State(initialValue: reps)
-        self._weightText = State(initialValue: weight > 0 ? Self.fmtWeight(weight) : "")
-        self._repsText = State(initialValue: reps > 0 ? "\(reps)" : "")
-        self.previousWeight = previousWeight
-        self.previousReps = previousReps
-        self.onUpdate = onUpdate
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
-                Text("Set \(setNumber)")
-                    .font(.caption.bold())
-                    .foregroundStyle(.secondary)
-                    .frame(width: 44, alignment: .leading)
-
-                Spacer()
-
-                // 重量
-                HStack(spacing: 6) {
-                    stepButton("minus") { stepWeight(-1) }
-                    VStack(spacing: 1) {
-                        TextField("0", text: $weightText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.center)
-                            .frame(width: 52)
-                            .onChange(of: weightText) { _, t in
-                                if let v = Double(t) {
-                                    weight = max(0, v)
-                                    onUpdate(weight, reps)
-                                }
-                            }
-                        Text("kg").font(.caption2).foregroundStyle(.secondary)
-                    }
-                    stepButton("plus") { stepWeight(1) }
-                }
-
-                Spacer()
-
-                // レップ数
-                HStack(spacing: 6) {
-                    stepButton("minus") { stepReps(-1) }
-                    VStack(spacing: 1) {
-                        TextField("0", text: $repsText)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.center)
-                            .frame(width: 36)
-                            .onChange(of: repsText) { _, t in
-                                if let v = Int(t) {
-                                    reps = max(0, v)
-                                    onUpdate(weight, reps)
-                                }
-                            }
-                        Text("回").font(.caption2).foregroundStyle(.secondary)
-                    }
-                    stepButton("plus") { stepReps(1) }
-                }
-            }
-
-            if let prevW = previousWeight, let prevR = previousReps {
-                Text("前回: \(Self.fmtWeight(prevW))kg × \(prevR)回")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .padding(.leading, 44)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-
-    private func stepButton(_ symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 11, weight: .bold))
-                .frame(width: 28, height: 28)
-                .background(Color(.systemGray5))
-                .clipShape(Circle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func stepWeight(_ delta: Double) {
-        weight = max(0, weight + delta)
-        weightText = Self.fmtWeight(weight)
-        onUpdate(weight, reps)
-    }
-
-    private func stepReps(_ delta: Int) {
-        reps = max(0, reps + delta)
-        repsText = "\(reps)"
-        onUpdate(weight, reps)
-    }
-
-    private static func fmtWeight(_ w: Double) -> String {
-        w.truncatingRemainder(dividingBy: 1) == 0
-            ? String(format: "%.0f", w)
-            : String(format: "%.1f", w)
-    }
 }
