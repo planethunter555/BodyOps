@@ -80,7 +80,8 @@ final class LLMAPIService: @unchecked Sendable {
         self.sseStreamer = sseStreamer
     }
 
-    func endpointURL(for provider: LLMProvider, modelName: String = "") -> URL {
+    /// プロバイダー別エンドポイント。Geminiのみストリーミング有無でパスが変わる。
+    func endpointURL(for provider: LLMProvider, modelName: String = "", streaming: Bool = true) -> URL {
         switch provider {
         case .claude:
             // swiftlint:disable:next force_unwrapping
@@ -90,8 +91,9 @@ final class LLMAPIService: @unchecked Sendable {
             return URL(string: "https://api.openai.com/v1/chat/completions")!
         case .gemini:
             let model = modelName.isEmpty ? LLMProvider.gemini.defaultModel : modelName
+            let method = streaming ? "streamGenerateContent?alt=sse" : "generateContent"
             // swiftlint:disable:next force_unwrapping
-            return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent?alt=sse")!
+            return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):\(method)")!
         case .appleOnDevice:
             // オンデバイスはAIClientでルーティングされるため到達しない
             // swiftlint:disable:next force_unwrapping
@@ -300,7 +302,7 @@ final class LLMAPIService: @unchecked Sendable {
         apiKey: String,
         modelName: String = ""
     ) async throws -> (text: String, inputTokens: Int, outputTokens: Int) {
-        var request = URLRequest(url: nonStreamingEndpointURL(for: provider, modelName: modelName))
+        var request = URLRequest(url: endpointURL(for: provider, modelName: modelName, streaming: false))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         applyAuthHeaders(to: &request, provider: provider, apiKey: apiKey)
@@ -316,25 +318,6 @@ final class LLMAPIService: @unchecked Sendable {
         case 401: throw LLMError.unauthorized
         case 429: throw LLMError.rateLimited
         default:  throw LLMError.serverError
-        }
-    }
-
-    private func nonStreamingEndpointURL(for provider: LLMProvider, modelName: String) -> URL {
-        switch provider {
-        case .claude:
-            // swiftlint:disable:next force_unwrapping
-            return URL(string: "https://api.anthropic.com/v1/messages")!
-        case .openai:
-            // swiftlint:disable:next force_unwrapping
-            return URL(string: "https://api.openai.com/v1/chat/completions")!
-        case .gemini:
-            let model = modelName.isEmpty ? "gemini-2.0-flash" : modelName
-            // swiftlint:disable:next force_unwrapping
-            return URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent")!
-        case .appleOnDevice:
-            // オンデバイスはAIClientでルーティングされるため到達しない
-            // swiftlint:disable:next force_unwrapping
-            return URL(string: "about:blank")!
         }
     }
 
@@ -436,187 +419,74 @@ final class LLMAPIService: @unchecked Sendable {
     }
 
     private func buildOpenAIBody(messages: [LLMMessage], system: String, modelName: String, stream: Bool = true) throws -> Data {
-        var apiMessages: [[String: Any]] = []
+        var apiMessages: [OpenAIMessagePayload] = []
         if !system.isEmpty {
-            apiMessages.append(["role": "system", "content": system])
+            apiMessages.append(OpenAIMessagePayload(role: "system", content: .text(system)))
         }
         for msg in messages {
             if let imgData = msg.imageData {
-                apiMessages.append([
-                    "role": msg.role,
-                    "content": [
-                        ["type": "text", "text": msg.content],
-                        ["type": "image_url", "image_url": ["url": "data:image/jpeg;base64,\(imgData.base64EncodedString())"]]
-                    ]
-                ])
+                apiMessages.append(OpenAIMessagePayload(
+                    role: msg.role,
+                    content: .multipart([
+                        .text(msg.content),
+                        .imageURL("data:image/jpeg;base64,\(imgData.base64EncodedString())")
+                    ])
+                ))
             } else {
-                apiMessages.append(["role": msg.role, "content": msg.content])
+                apiMessages.append(OpenAIMessagePayload(role: msg.role, content: .text(msg.content)))
             }
         }
-        var body: [String: Any] = [
-            "model": modelName.isEmpty ? LLMProvider.openai.defaultModel : modelName,
-            "stream": stream,
-            "messages": apiMessages
-        ]
-        // ストリーミング時はトークン数をレスポンスに含める
-        if stream {
-            body["stream_options"] = ["include_usage": true]
-        }
-        return try JSONSerialization.data(withJSONObject: body)
+        let payload = OpenAIRequestPayload(
+            model: modelName.isEmpty ? LLMProvider.openai.defaultModel : modelName,
+            stream: stream,
+            // ストリーミング時はトークン数をレスポンスに含める
+            streamOptions: stream ? OpenAIStreamOptions(includeUsage: true) : nil,
+            messages: apiMessages
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        return try encoder.encode(payload)
     }
 
     private func buildGeminiBody(messages: [LLMMessage], system: String) throws -> Data {
-        let contents: [[String: Any]] = messages.map { msg in
+        let contents: [GeminiContent] = messages.map { msg in
             let role = msg.role == "assistant" ? "model" : "user"
             if let imgData = msg.imageData {
-                return [
-                    "role": role,
-                    "parts": [
-                        ["inlineData": ["mimeType": "image/jpeg", "data": imgData.base64EncodedString()]],
-                        ["text": msg.content]
-                    ]
-                ]
+                return GeminiContent(role: role, parts: [
+                    .inlineData(mimeType: "image/jpeg", data: imgData.base64EncodedString()),
+                    .text(msg.content)
+                ])
             }
-            return ["role": role, "parts": [["text": msg.content]]]
+            return GeminiContent(role: role, parts: [.text(msg.content)])
         }
-        var body: [String: Any] = ["contents": contents]
-        if !system.isEmpty {
-            body["systemInstruction"] = ["parts": [["text": system]]]
-        }
-        return try JSONSerialization.data(withJSONObject: body)
+        let payload = GeminiRequestPayload(
+            contents: contents,
+            systemInstruction: system.isEmpty ? nil : GeminiSystemInstruction(parts: [.text(system)])
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        return try encoder.encode(payload)
     }
 
+    /// バッファ済みSSE全文をパースする（接続テスト用）。パースはparseSSELineに一本化。
     private func parseSSEResponse(data: Data, provider: LLMProvider) -> (chunks: [String], inputTokens: Int, outputTokens: Int) {
         guard let text = String(data: data, encoding: .utf8) else { return ([], 0, 0) }
-        let lines = text.components(separatedBy: "\n")
         var chunks: [String] = []
         var inputTokens = 0
         var outputTokens = 0
-
-        for line in lines {
-            let stripped = line.hasPrefix("data: ") ? String(line.dropFirst(6)) : line
-            guard !stripped.isEmpty, stripped != "[DONE]" else { continue }
-            guard let lineData = stripped.data(using: .utf8),
-                  let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any] else { continue }
-
-            switch provider {
-            case .claude:
-                // テキストチャンク
-                if let delta = json["delta"] as? [String: Any],
-                   let t = delta["text"] as? String {
-                    chunks.append(t)
+        for line in text.components(separatedBy: "\n") {
+            for event in Self.parseSSELine(line, provider: provider) {
+                switch event {
+                case .text(let chunk):
+                    chunks.append(chunk)
+                case .thinking:
+                    break
+                case .usage(let input, let output):
+                    if input > 0 { inputTokens = input }
+                    if output > 0 { outputTokens = output }
                 }
-                // message_start → input tokens
-                if let message = json["message"] as? [String: Any],
-                   let usage = message["usage"] as? [String: Any],
-                   let n = usage["input_tokens"] as? Int {
-                    inputTokens = n
-                }
-                // message_delta → output tokens
-                if let usage = json["usage"] as? [String: Any],
-                   let n = usage["output_tokens"] as? Int {
-                    outputTokens = n
-                }
-            case .openai:
-                if let choices = json["choices"] as? [[String: Any]],
-                   let delta = choices.first?["delta"] as? [String: Any],
-                   let content = delta["content"] as? String {
-                    chunks.append(content)
-                }
-                // stream_options: include_usage: true の最終チャンク
-                if let usage = json["usage"] as? [String: Any] {
-                    inputTokens = usage["prompt_tokens"] as? Int ?? inputTokens
-                    outputTokens = usage["completion_tokens"] as? Int ?? outputTokens
-                }
-            case .gemini:
-                if let candidates = json["candidates"] as? [[String: Any]],
-                   let content = candidates.first?["content"] as? [String: Any],
-                   let parts = content["parts"] as? [[String: Any]],
-                   let t = parts.first?["text"] as? String {
-                    chunks.append(t)
-                }
-                // usageMetadata は累積値なので最後のものを使用
-                if let meta = json["usageMetadata"] as? [String: Any] {
-                    inputTokens = meta["promptTokenCount"] as? Int ?? inputTokens
-                    outputTokens = meta["candidatesTokenCount"] as? Int ?? outputTokens
-                }
-            case .appleOnDevice:
-                break  // オンデバイスはSSEを使わない（到達しない）
             }
         }
         return (chunks, inputTokens, outputTokens)
     }
-}
-
-// MARK: - Claude Codable Payloads
-
-private struct ClaudeRequestPayload: Encodable {
-    let model: String
-    let maxTokens: Int
-    let stream: Bool
-    let system: String?
-    let thinking: ClaudeThinkingConfig?
-    let messages: [ClaudeMessagePayload]
-
-    enum CodingKeys: String, CodingKey {
-        case model, stream, system, thinking, messages
-        case maxTokens = "max_tokens"
-    }
-}
-
-private struct ClaudeThinkingConfig: Encodable {
-    let type: String
-    let display: String
-}
-
-private struct ClaudeImageSource: Encodable {
-    let type: String
-    let mediaType: String
-    let data: String
-
-    enum CodingKeys: String, CodingKey {
-        case type, data
-        case mediaType = "media_type"
-    }
-}
-
-private enum ClaudeContentBlock: Encodable {
-    case text(String)
-    case image(ClaudeImageSource)
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch self {
-        case .text(let value):
-            try container.encode("text", forKey: .type)
-            try container.encode(value, forKey: .text)
-        case .image(let source):
-            try container.encode("image", forKey: .type)
-            try container.encode(source, forKey: .source)
-        }
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case type, text, source
-    }
-}
-
-private enum ClaudeContent: Encodable {
-    case text(String)
-    case multipart([ClaudeContentBlock])
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .text(let value):
-            try container.encode(value)
-        case .multipart(let blocks):
-            try container.encode(blocks)
-        }
-    }
-}
-
-private struct ClaudeMessagePayload: Encodable {
-    let role: String
-    let content: ClaudeContent
 }

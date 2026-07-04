@@ -96,7 +96,6 @@ final class LLMSetting {
     var id: UUID
     var providerRaw: String
     var modelName: String
-    var apiKey: String
     var updatedAt: Date
 
     var provider: LLMProvider {
@@ -108,7 +107,6 @@ final class LLMSetting {
         self.id = UUID()
         self.providerRaw = provider.rawValue
         self.modelName = modelName.isEmpty ? provider.defaultModel : modelName
-        self.apiKey = provider.rawValue
         self.updatedAt = Date()
     }
 }

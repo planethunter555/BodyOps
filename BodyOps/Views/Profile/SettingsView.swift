@@ -565,7 +565,6 @@ struct SettingsView: View {
         let llmSetting = try LLMSettingsStore.current(in: modelContext)
         llmSetting.provider = selectedProvider
         llmSetting.modelName = modelName
-        llmSetting.apiKey = selectedProvider.rawValue
         llmSetting.updatedAt = Date()
 
         try KeychainService.shared.save(apiKey: apiKeyInput, forProvider: selectedProvider)
