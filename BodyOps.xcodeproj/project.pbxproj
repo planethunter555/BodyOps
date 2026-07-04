@@ -21,6 +21,7 @@
 		1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122D8B90907DED0A4F6BF160 /* ContentView.swift */; };
 		1B3800E8372352B996171DD3 /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0441871ABDC563C063788A35 /* KeychainServiceTests.swift */; };
 		2014215565BA8B79E99AF6FD /* WorkoutEntryStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E744935E05F0E2B82D76468B /* WorkoutEntryStartView.swift */; };
+		21C9E90D4820732B497307CA /* MonthCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B0A28A2DEDD9A1BEDAF04E /* MonthCalendarView.swift */; };
 		2B079FDA07B347F3C9FFADC5 /* MealInputMethodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EDD4CE959817F3DEFEE0961 /* MealInputMethodView.swift */; };
 		2BD2DFD0CAD280614DD97656 /* AIPrivacyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1DA6BC4F8F81FECF1F87EC /* AIPrivacyViews.swift */; };
 		2D8864E2AB82A646DA3891BC /* ChatHistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 502FA1EE447D4F9A8BFDF116 /* ChatHistoryStoreTests.swift */; };
@@ -67,7 +68,6 @@
 		E5CA9A009E6FE31B055E0ABF /* WorkoutPrefillService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F7469FDBF46270EE08B625 /* WorkoutPrefillService.swift */; };
 		E982381B3B09E2D259DEF1FF /* ClaudePayloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86C748A75D41765DDFB08A /* ClaudePayloads.swift */; };
 		EA4B83BBD406ECB1204F1549 /* BodyOpsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07759C9F6ACCE257531C659F /* BodyOpsApp.swift */; };
-		EA9E97018485941F699EE3B7 /* CopyFromDateSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4CC5CED4D7FCA95DC554EC8 /* CopyFromDateSheet.swift */; };
 		FB71C647D30D9FA28F315CCF /* GraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80AE13CA86E0212DD1FB759 /* GraphView.swift */; };
 		FC972F27350EAECED2765785 /* WorkoutPrefillServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F98697CF861353AA08869C /* WorkoutPrefillServiceTests.swift */; };
 		FDD67E3530393BD37CF61B6B /* AISettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B75D19B800CA7B1FFCE0B0F6 /* AISettingsSections.swift */; };
@@ -90,6 +90,7 @@
 		07759C9F6ACCE257531C659F /* BodyOpsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsApp.swift; sourceTree = "<group>"; };
 		122D8B90907DED0A4F6BF160 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1629F4A039635E3B58BFF04C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		17B0A28A2DEDD9A1BEDAF04E /* MonthCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarView.swift; sourceTree = "<group>"; };
 		1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
 		25BCC8D85B066F0248D6D6BF /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		29F98697CF861353AA08869C /* WorkoutPrefillServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPrefillServiceTests.swift; sourceTree = "<group>"; };
@@ -142,7 +143,6 @@
 		DF9D900FB568663D1ABEA99C /* ExerciseEntrySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseEntrySection.swift; sourceTree = "<group>"; };
 		E17AE53BB96EDBB462936E2F /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		E2F531606F4408AE0B32B118 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		E4CC5CED4D7FCA95DC554EC8 /* CopyFromDateSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyFromDateSheet.swift; sourceTree = "<group>"; };
 		E744935E05F0E2B82D76468B /* WorkoutEntryStartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEntryStartView.swift; sourceTree = "<group>"; };
 		E9BD8F22F87768FB6081B46F /* APIUsageRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIUsageRecord.swift; sourceTree = "<group>"; };
 		EA86C748A75D41765DDFB08A /* ClaudePayloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudePayloads.swift; sourceTree = "<group>"; };
@@ -215,6 +215,7 @@
 			children = (
 				9C1DA6BC4F8F81FECF1F87EC /* AIPrivacyViews.swift */,
 				65BA2F29C763C6C0F664DF26 /* CameraPickerView.swift */,
+				17B0A28A2DEDD9A1BEDAF04E /* MonthCalendarView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -342,7 +343,6 @@
 		D01FD3D85AC61B2153A7C3AC /* Workout */ = {
 			isa = PBXGroup;
 			children = (
-				E4CC5CED4D7FCA95DC554EC8 /* CopyFromDateSheet.swift */,
 				DF9D900FB568663D1ABEA99C /* ExerciseEntrySection.swift */,
 				1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */,
 				3049BD72A8B6C10C5971B403 /* SetInputRow.swift */,
@@ -489,7 +489,6 @@
 				B33F478B48860B8D4929F8F0 /* ChatViewModel.swift in Sources */,
 				E982381B3B09E2D259DEF1FF /* ClaudePayloads.swift in Sources */,
 				1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */,
-				EA9E97018485941F699EE3B7 /* CopyFromDateSheet.swift in Sources */,
 				3EE86521941C8DAC93E56F00 /* Exercise.swift in Sources */,
 				51DF91DE96C6A4A0E597BE50 /* ExerciseEntrySection.swift in Sources */,
 				9FCC8FB7D89EA5B18206FD93 /* ExerciseManagementSection.swift in Sources */,
@@ -509,6 +508,7 @@
 				6DD467E5A46808397EE7C15E /* MealRecordSheet.swift in Sources */,
 				71B4B38AB3F58D116A9D9840 /* MealRecordViewModel.swift in Sources */,
 				DB4ED62FD532E4D24F72A901 /* ModelListService.swift in Sources */,
+				21C9E90D4820732B497307CA /* MonthCalendarView.swift in Sources */,
 				A5CE4CFB7332DC3A886AD642 /* NotificationService.swift in Sources */,
 				0A48AAD7F6825C96FDE772FD /* NotificationSetting.swift in Sources */,
 				996B93F926DD7A4C10D9CA86 /* NotificationSettingsSection.swift in Sources */,

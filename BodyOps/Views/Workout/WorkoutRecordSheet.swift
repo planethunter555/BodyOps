@@ -10,7 +10,6 @@ struct WorkoutRecordSheet: View {
     @State private var exercises: [WorkoutExerciseEntry] = []
     @State private var sessionMemo = ""
     @State private var showExercisePicker = false
-    @State private var showCopyFromDateSheet = false
     /// 前回の記録から自動入力されたエントリのID（調整を促すキャプション表示用）
     @State private var prefilledEntryIds: Set<UUID> = []
 
@@ -25,10 +24,8 @@ struct WorkoutRecordSheet: View {
             Group {
                 if !isEditMode && exercises.isEmpty {
                     WorkoutEntryStartView(
-                        lastSessionDate: prefillService.mostRecentSessionDate(before: date),
-                        onCopyLastSession: copyLastSession,
-                        onPickExercise: { showExercisePicker = true },
-                        onCopyFromDate: { showCopyFromDateSheet = true }
+                        onLoadEntries: { entries in exercises = entries },
+                        onPickExercise: { showExercisePicker = true }
                     )
                 } else {
                     List {
@@ -61,11 +58,6 @@ struct WorkoutRecordSheet: View {
                 ExercisePickerView { exercise in
                     addExercise(exercise)
                     showExercisePicker = false
-                }
-            }
-            .sheet(isPresented: $showCopyFromDateSheet) {
-                CopyFromDateSheet { entries in
-                    exercises = entries
                 }
             }
             .onAppear {
@@ -109,12 +101,6 @@ struct WorkoutRecordSheet: View {
             exercises.append(entry)
             prefilledEntryIds.insert(entry.id)
         }
-    }
-
-    /// 直近のトレーニング日のメニュー全体を読み込む
-    private func copyLastSession() {
-        guard let lastDate = prefillService.mostRecentSessionDate(before: date) else { return }
-        exercises = prefillService.entries(for: lastDate)
     }
 
     private func loadSession(_ session: WorkoutSession) {

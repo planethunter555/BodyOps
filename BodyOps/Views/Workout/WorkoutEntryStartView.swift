@@ -1,83 +1,139 @@
 import SwiftUI
+import SwiftData
 
 /// 筋トレ記録の新規作成時に表示するスタート画面。
-/// 「種目から」「日付から」の2つの入力導線と、前回コピーのショートカットを提供する。
+/// カレンダーを常時表示し、「過去の日のメニュー読み込み（既定は前回のトレーニング）」と
+/// 「種目から始める」の導線を提供する。
 struct WorkoutEntryStartView: View {
-    let lastSessionDate: Date?
-    let onCopyLastSession: () -> Void
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \WorkoutSession.date) private var allSessions: [WorkoutSession]
+
+    let onLoadEntries: ([WorkoutExerciseEntry]) -> Void
     let onPickExercise: () -> Void
-    let onCopyFromDate: () -> Void
+
+    @State private var selectedDate = Calendar.current.startOfDay(for: Date())
+    @State private var didSetInitialDate = false
+
+    private var prefillService: WorkoutPrefillService {
+        WorkoutPrefillService(context: modelContext)
+    }
+
+    private var sessionDates: Set<Date> {
+        Set(allSessions.map { Calendar.current.startOfDay(for: $0.date) })
+    }
+
+    private var mostRecentSessionDay: Date? {
+        allSessions.last.map { Calendar.current.startOfDay(for: $0.date) }
+    }
+
+    private var previewEntries: [WorkoutExerciseEntry] {
+        prefillService.entries(for: selectedDate)
+    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                if let lastDate = lastSessionDate {
-                    Button(action: onCopyLastSession) {
-                        HStack {
-                            Image(systemName: "arrow.counterclockwise.circle.fill")
-                                .font(.title2)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("前回のトレーニングをコピー")
-                                    .font(.headline)
-                                Text("\(Self.fmtDate(lastDate)) のメニューをそのまま読み込みます")
-                                    .font(.caption)
-                                    .opacity(0.85)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                    }
-                    .buttonStyle(.borderedProminent)
+                calendarCard
+                dayPreviewCard
 
-                    HStack {
-                        VStack { Divider() }
-                        Text("または")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        VStack { Divider() }
-                    }
-                    .padding(.vertical, 4)
+                HStack {
+                    VStack { Divider() }
+                    Text("または")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    VStack { Divider() }
                 }
 
-                methodCard(
-                    icon: "dumbbell.fill",
-                    title: "種目から始める",
-                    description: "種目を選ぶと前回のセット内容が自動で入力されます",
-                    action: onPickExercise
-                )
-
-                methodCard(
-                    icon: "calendar.badge.clock",
-                    title: "過去の日からコピー",
-                    description: "カレンダーで日を選び、その日のメニュー全体を読み込みます",
-                    action: onCopyFromDate
-                )
+                exercisePickerCard
 
                 Spacer(minLength: 0)
             }
             .padding()
         }
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            // 初期選択は直近のトレーニング日（プレビューが「前回のトレーニング」になる）
+            guard !didSetInitialDate else { return }
+            didSetInitialDate = true
+            if let recent = mostRecentSessionDay {
+                selectedDate = recent
+            }
+        }
     }
 
-    private func methodCard(icon: String, title: String, description: String,
-                            action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    // MARK: - Cards
+
+    private var calendarCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("過去の記録からコピー", systemImage: "calendar.badge.clock")
+                .font(.subheadline.bold())
+            Text("日付を選ぶと、その日のメニューを読み込めます")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            MonthCalendarView(selectedDate: $selectedDate, markedDates: sessionDates)
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    @ViewBuilder
+    private var dayPreviewCard: some View {
+        let entries = previewEntries
+        let isLastSession = mostRecentSessionDay.map { Calendar.current.isDate($0, inSameDayAs: selectedDate) } ?? false
+        VStack(alignment: .leading, spacing: 8) {
+            Text(isLastSession
+                 ? "前回のトレーニング（\(Self.fmtDate(selectedDate))）"
+                 : "\(Self.fmtDate(selectedDate)) のメニュー")
+                .font(.subheadline.bold())
+
+            if entries.isEmpty {
+                Text("この日の記録はありません")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(entries) { entry in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Label(entry.exercise.name, systemImage: "dumbbell.fill")
+                            .font(.caption.bold())
+                        Text(setSummary(entry.sets))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 24)
+                    }
+                }
+                Button {
+                    onLoadEntries(entries)
+                } label: {
+                    Label(isLastSession ? "前回のメニューを読み込む" : "この日のメニューを読み込む",
+                          systemImage: "arrow.counterclockwise.circle.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 4)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    private var exercisePickerCard: some View {
+        Button(action: onPickExercise) {
             HStack(spacing: 14) {
-                Image(systemName: icon)
+                Image(systemName: "dumbbell.fill")
                     .font(.title2)
                     .foregroundStyle(Color.accentColor)
                     .frame(width: 44, height: 44)
                     .background(Color.accentColor.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
+                    Text("種目から始める")
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    Text(description)
+                    Text("種目を選ぶと前回のセット内容が自動で入力されます")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
@@ -93,6 +149,19 @@ struct WorkoutEntryStartView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Helpers
+
+    private func setSummary(_ sets: [WorkoutSetEntry]) -> String {
+        sets.map { "\(Self.fmtWeight($0.weight))kg×\($0.reps)" }
+            .joined(separator: " / ")
+    }
+
+    private static func fmtWeight(_ w: Double) -> String {
+        w.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", w)
+            : String(format: "%.1f", w)
     }
 
     private static func fmtDate(_ date: Date) -> String {
