@@ -37,7 +37,6 @@ struct MealRecordSheet: View {
                         onTakePhoto: { showCamera = true },
                         onPickFromLibrary: { showLibraryPicker = true },
                         onChooseText: { step = .confirm },
-                        onChooseManual: { step = .confirm },
                         onCopyMeal: { meal in
                             // 過去の食事を内容ごとコピーして確認画面へ（日付は記録対象日のまま）
                             viewModel.load(from: meal)

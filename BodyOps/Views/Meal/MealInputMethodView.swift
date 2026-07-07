@@ -12,7 +12,6 @@ struct MealInputMethodView: View {
     let onTakePhoto: () -> Void
     let onPickFromLibrary: () -> Void
     let onChooseText: () -> Void
-    let onChooseManual: () -> Void
     let onCopyMeal: (MealRecord) -> Void
 
     @State private var showPhotoDialog = false
@@ -72,16 +71,10 @@ struct MealInputMethodView: View {
                 methodCard(
                     icon: "keyboard",
                     title: "テキストで記録",
-                    description: "「ご飯1杯、鶏胸肉200g」のように入力してAIで推定します"
+                    description: "内容を入力してAIで推定、または栄養素を直接入力します"
                 ) {
                     onChooseText()
                 }
-
-                Button("AIを使わず手動で入力する") {
-                    onChooseManual()
-                }
-                .font(.subheadline)
-                .padding(.top, 8)
 
                 Spacer(minLength: 0)
             }
