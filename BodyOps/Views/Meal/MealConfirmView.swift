@@ -1,21 +1,60 @@
 import SwiftUI
 
-/// 食事記録の確認・保存画面（Step 2）。
-/// 推定ステータスバナーと下部固定の保存ボタンで「AI結果はまだ保存されていない」ことを明示する。
+/// 食事記録の入力・確認画面（Step 2）。
+/// 入力方式（写真AI/テキストAI/手動）によってレイアウトが変わり、
+/// 手動モードではAI関連のUIを一切表示しない。
 struct MealConfirmView: View {
+    private enum Field: Hashable {
+        case description
+        case calories
+        case protein
+        case fat
+        case carbs
+    }
+
     @Bindable var viewModel: MealRecordViewModel
     let isEditMode: Bool
+    let mode: MealEntryMode
     let onRequestEstimate: () -> Void
     let onChangePhoto: () -> Void
     let onSave: () -> Void
 
+    @FocusState private var focusedField: Field?
+
     var body: some View {
         Form {
             mealTypeSection
-            descriptionSection
-            photoSection
-            estimationSection
-            pfcSection
+
+            if isEditMode {
+                descriptionSection(header: "食事内容")
+                photoSection(header: "写真")
+                estimationSection
+                pfcSection(header: "栄養素（手動修正可）")
+            } else {
+                switch mode {
+                case .photo:
+                    photoSection(header: "写真")
+                    estimationSection
+                    pfcSection(header: "推定結果（修正できます）")
+                    descriptionSection(header: "メモ（任意）")
+                case .textAI:
+                    descriptionSection(header: "食事内容")
+                    estimationSection
+                    pfcSection(header: "推定結果（修正できます）")
+                case .manual:
+                    pfcSection(header: "栄養素を入力")
+                    descriptionSection(header: "メモ（任意）")
+                    photoSection(header: "写真（任意）")
+                }
+            }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            // 数値キーボードにはリターンキーが無いため「完了」を用意する
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("完了") { focusedField = nil }
+            }
         }
         .safeAreaInset(edge: .bottom) {
             saveButton
@@ -35,15 +74,22 @@ struct MealConfirmView: View {
         }
     }
 
-    private var descriptionSection: some View {
-        Section("食事内容") {
+    private func descriptionSection(header: String) -> some View {
+        Section {
             TextField("例: ご飯1杯、鶏胸肉200g、味噌汁", text: $viewModel.mealDescription, axis: .vertical)
                 .lineLimit(3...6)
+                .focused($focusedField, equals: .description)
+        } header: {
+            Text(header)
+        } footer: {
+            if !isEditMode && mode == .textAI {
+                Text("入力した内容をAIが解析してカロリー・PFCを推定します")
+            }
         }
     }
 
-    private var photoSection: some View {
-        Section("写真") {
+    private func photoSection(header: String) -> some View {
+        Section(header) {
             if let img = viewModel.previewImage {
                 HStack {
                     Image(uiImage: img)
@@ -100,7 +146,9 @@ struct MealConfirmView: View {
             Text("AI推定")
         } footer: {
             if case .idle = viewModel.estimationPhase {
-                Text("食事内容または写真からカロリー・PFCを自動推定します")
+                Text(mode == .photo
+                     ? "写真からカロリー・PFCを自動推定します"
+                     : "食事内容からカロリー・PFCを自動推定します")
             }
         }
     }
@@ -146,36 +194,53 @@ struct MealConfirmView: View {
 
     private func estimateButton(title: String) -> some View {
         Button {
+            focusedField = nil
             onRequestEstimate()
         } label: {
             Label(title, systemImage: "brain")
                 .font(.subheadline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 2)
         }
+        .buttonStyle(.borderedProminent)
         .disabled(viewModel.cannotEstimate)
+        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
     }
 
-    private var pfcSection: some View {
-        Section("栄養素（手動修正可）") {
-            pfcRow(label: "カロリー (kcal)", value: $viewModel.calories)
-            pfcRow(label: "タンパク質 P (g)", value: $viewModel.protein)
-            pfcRow(label: "脂質 F (g)", value: $viewModel.fat)
-            pfcRow(label: "炭水化物 C (g)", value: $viewModel.carbs)
+    private func pfcSection(header: String) -> some View {
+        Section(header) {
+            pfcRow(label: "カロリー", unit: "kcal", value: $viewModel.calories, field: .calories)
+            pfcRow(label: "タンパク質 P", unit: "g", value: $viewModel.protein, field: .protein)
+            pfcRow(label: "脂質 F", unit: "g", value: $viewModel.fat, field: .fat)
+            pfcRow(label: "炭水化物 C", unit: "g", value: $viewModel.carbs, field: .carbs)
         }
     }
 
-    private func pfcRow(label: String, value: Binding<Double>) -> some View {
+    private func pfcRow(label: String, unit: String, value: Binding<Double>, field: Field) -> some View {
         HStack {
             Text(label)
             Spacer()
             TextField("0", value: value, format: .number)
                 .keyboardType(.decimalPad)
+                .focused($focusedField, equals: field)
                 .multilineTextAlignment(.trailing)
-                .frame(width: 80)
+                .frame(width: 100)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 8)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            Text(unit)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: 34, alignment: .leading)
         }
+        .contentShape(Rectangle())
+        .onTapGesture { focusedField = field }
     }
 
     private var saveButton: some View {
         Button {
+            focusedField = nil
             onSave()
         } label: {
             Label(isEditMode ? "変更を保存" : "この内容で保存", systemImage: "checkmark.circle.fill")

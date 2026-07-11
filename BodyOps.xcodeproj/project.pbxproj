@@ -94,12 +94,12 @@
 		1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
 		25BCC8D85B066F0248D6D6BF /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		29F98697CF861353AA08869C /* WorkoutPrefillServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPrefillServiceTests.swift; sourceTree = "<group>"; };
-		2A862B1C88211C117161AC7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2A862B1C88211C117161AC7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2AB60D85E503124A0A7C3CF4 /* WorkoutCSVImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCSVImporter.swift; sourceTree = "<group>"; };
 		2D1D62293D825EBC24B06F0B /* TodayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayContentView.swift; sourceTree = "<group>"; };
 		2D2710360FFD5CB09CF514DE /* GeminiPayloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiPayloads.swift; sourceTree = "<group>"; };
 		2EDD4CE959817F3DEFEE0961 /* MealInputMethodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealInputMethodView.swift; sourceTree = "<group>"; };
-		2F31D880250E0ADFD8D6D675 /* BodyOps.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BodyOps.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2F31D880250E0ADFD8D6D675 /* BodyOps.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BodyOps.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3049BD72A8B6C10C5971B403 /* SetInputRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetInputRow.swift; sourceTree = "<group>"; };
 		3069A86FDD6499591A73D469 /* ExercisePresetServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePresetServiceTests.swift; sourceTree = "<group>"; };
 		341C5706E033CB8EF5AC5CDB /* LLMSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSettingsStore.swift; sourceTree = "<group>"; };
@@ -415,11 +415,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
-				TargetAttributes = {
-					1979765E23FE6B96F54DFF93 = {
-						DevelopmentTeam = "";
-					};
-				};
 			};
 			buildConfigurationList = 4137A3214974F9DC491FB841 /* Build configuration list for PBXProject "BodyOps" */;
 			developmentRegion = en;
@@ -631,7 +626,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BodyOps/Resources/BodyOps.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 9472GD6P88;
 				INFOPLIST_FILE = BodyOps/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -669,7 +664,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BodyOps/Resources/BodyOps.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 9472GD6P88;
 				INFOPLIST_FILE = BodyOps/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (

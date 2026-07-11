@@ -17,6 +17,8 @@ struct MealRecordSheet: View {
 
     @State private var viewModel = MealRecordViewModel()
     @State private var step: Step = .chooseMethod
+    /// 選択された入力方式（確認画面のレイアウトが変わる）
+    @State private var entryMode: MealEntryMode = .manual
     @State private var showAIConsent = false
     @State private var showCamera = false
     @State private var showLibraryPicker = false
@@ -34,12 +36,26 @@ struct MealRecordSheet: View {
                 if !isEditMode && step == .chooseMethod {
                     MealInputMethodView(
                         mealType: $viewModel.mealType,
-                        onTakePhoto: { showCamera = true },
-                        onPickFromLibrary: { showLibraryPicker = true },
-                        onChooseText: { step = .confirm },
+                        onTakePhoto: {
+                            entryMode = .photo
+                            showCamera = true
+                        },
+                        onPickFromLibrary: {
+                            entryMode = .photo
+                            showLibraryPicker = true
+                        },
+                        onChooseTextAI: {
+                            entryMode = .textAI
+                            step = .confirm
+                        },
+                        onChooseManual: {
+                            entryMode = .manual
+                            step = .confirm
+                        },
                         onCopyMeal: { meal in
                             // 過去の食事を内容ごとコピーして確認画面へ（日付は記録対象日のまま）
                             viewModel.load(from: meal)
+                            entryMode = .manual
                             step = .confirm
                         }
                     )
@@ -47,6 +63,7 @@ struct MealRecordSheet: View {
                     MealConfirmView(
                         viewModel: viewModel,
                         isEditMode: isEditMode,
+                        mode: entryMode,
                         onRequestEstimate: requestEstimate,
                         onChangePhoto: changePhoto,
                         onSave: save

@@ -3,18 +3,18 @@ import SwiftData
 import UIKit
 
 /// 食事記録の入力方法選択画面（Step 1）。
-/// カレンダーで過去の食事をコピーできるほか、
-/// 「写真で記録」「テキストで記録」「手動入力」の導線を提供する。
+/// 「写真からAI推定」「テキストからAI推定」「手動で入力」の3方式を明確に提示し、
+/// カレンダーからの過去の食事コピーも提供する。
 struct MealInputMethodView: View {
     @Query(sort: \MealRecord.recordedAt) private var allMeals: [MealRecord]
 
     @Binding var mealType: String
     let onTakePhoto: () -> Void
     let onPickFromLibrary: () -> Void
-    let onChooseText: () -> Void
+    let onChooseTextAI: () -> Void
+    let onChooseManual: () -> Void
     let onCopyMeal: (MealRecord) -> Void
 
-    @State private var showPhotoDialog = false
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
 
     private var cameraAvailable: Bool {
@@ -42,38 +42,40 @@ struct MealInputMethodView: View {
                 .pickerStyle(.segmented)
                 .padding(.bottom, 4)
 
-                calendarCard
+                photoAICard
 
-                if !mealsOfSelectedDay.isEmpty {
-                    dayMealsCard
+                methodCard(
+                    icon: "keyboard",
+                    iconColor: .blue,
+                    title: "テキストからAI推定",
+                    description: "「ご飯1杯、鶏胸肉200g」のように入力するとAIがカロリー・PFCを推定します"
+                ) {
+                    onChooseTextAI()
+                }
+
+                methodCard(
+                    icon: "pencil.line",
+                    iconColor: .gray,
+                    title: "手動で入力",
+                    description: "AIを使わず、カロリー・PFCを自分で入力します"
+                ) {
+                    onChooseManual()
                 }
 
                 HStack {
                     VStack { Divider() }
-                    Text("新しく入力")
+                    Text("過去の食事からコピー")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .fixedSize()
                     VStack { Divider() }
                 }
+                .padding(.top, 4)
 
-                methodCard(
-                    icon: "camera.fill",
-                    title: "写真で記録",
-                    description: "食事の写真からAIがカロリー・PFCを自動推定します"
-                ) {
-                    if cameraAvailable {
-                        showPhotoDialog = true
-                    } else {
-                        onPickFromLibrary()
-                    }
-                }
+                calendarCard
 
-                methodCard(
-                    icon: "keyboard",
-                    title: "テキストで記録",
-                    description: "内容を入力してAIで推定、または栄養素を直接入力します"
-                ) {
-                    onChooseText()
+                if !mealsOfSelectedDay.isEmpty {
+                    dayMealsCard
                 }
 
                 Spacer(minLength: 0)
@@ -81,19 +83,72 @@ struct MealInputMethodView: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground))
-        .confirmationDialog("写真で記録", isPresented: $showPhotoDialog) {
-            Button("カメラで撮影") { onTakePhoto() }
-            Button("ライブラリから選択") { onPickFromLibrary() }
-            Button("キャンセル", role: .cancel) {}
-        }
     }
 
     // MARK: - Cards
 
+    /// 写真からAI推定。ポップアップを挟まず、カメラ/ライブラリのボタンをカード内に直接置く。
+    private var photoAICard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 14) {
+                Image(systemName: "camera.fill")
+                    .font(.title2)
+                    .foregroundStyle(Color.green)
+                    .frame(width: 44, height: 44)
+                    .background(Color.green.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("写真からAI推定")
+                        .font(.headline)
+                    Text("食事の写真からAIがカロリー・PFCを自動推定します")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer()
+            }
+            HStack(spacing: 10) {
+                if cameraAvailable {
+                    Button {
+                        onTakePhoto()
+                    } label: {
+                        Label("カメラで撮影", systemImage: "camera")
+                            .font(.subheadline)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+
+                    Button {
+                        onPickFromLibrary()
+                    } label: {
+                        Label("ライブラリ", systemImage: "photo.on.rectangle")
+                            .font(.subheadline)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.green)
+                } else {
+                    Button {
+                        onPickFromLibrary()
+                    } label: {
+                        Label("ライブラリから選択", systemImage: "photo.on.rectangle")
+                            .font(.subheadline)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
     private var calendarCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("過去の食事からコピー", systemImage: "calendar.badge.clock")
-                .font(.subheadline.bold())
             Text("日付を選ぶと、その日の食事を再利用できます")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -146,15 +201,15 @@ struct MealInputMethodView: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
-    private func methodCard(icon: String, title: String, description: String,
+    private func methodCard(icon: String, iconColor: Color, title: String, description: String,
                             action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: icon)
                     .font(.title2)
-                    .foregroundStyle(Color.green)
+                    .foregroundStyle(iconColor)
                     .frame(width: 44, height: 44)
-                    .background(Color.green.opacity(0.12))
+                    .background(iconColor.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)

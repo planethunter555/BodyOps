@@ -41,6 +41,16 @@ enum EstimationPhase: Equatable {
     case failed(String)
 }
 
+/// 食事記録の入力方式。入力画面のレイアウトがこれによって変わる。
+enum MealEntryMode {
+    /// 写真からAI推定（写真が主役、推定は自動実行）
+    case photo
+    /// テキストからAI推定（食事内容の入力と推定ボタンが主役）
+    case textAI
+    /// 手動入力（AI関連のUIは表示しない）
+    case manual
+}
+
 // MARK: - ViewModel
 
 @Observable

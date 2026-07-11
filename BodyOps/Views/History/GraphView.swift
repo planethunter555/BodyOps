@@ -6,7 +6,6 @@ struct GraphView: View {
     @Query(sort: \WorkoutSession.date) private var sessions: [WorkoutSession]
 
     @State private var selectedPeriod: GraphPeriod = .threeMonths
-    @State private var selectedExerciseName: String = ""
     @State private var customStart: Date = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
     @State private var customEnd: Date = Date()
 
@@ -45,20 +44,17 @@ struct GraphView: View {
         }
     }
 
-    /// 全セッションでの実施回数上位10種目
-    var top10Exercises: [String] {
+    /// 記録のある全種目（実施回数の多い順）
+    var exercisesByFrequency: [String] {
         var countMap: [String: Int] = [:]
         for session in sessions {
             let names = Set(session.sets.compactMap { $0.exercise?.name })
             for name in names { countMap[name, default: 0] += 1 }
         }
-        return countMap.sorted { $0.value > $1.value }.prefix(10).map { $0.key }
-    }
-
-    /// 全種目名（カスタムピッカー用）
-    var allExerciseNames: [String] {
-        let names = sessions.flatMap { $0.sets }.compactMap { $0.exercise?.name }
-        return Array(Set(names)).sorted()
+        return countMap.sorted {
+            if $0.value != $1.value { return $0.value > $1.value }
+            return $0.key < $1.key
+        }.map { $0.key }
     }
 
     var body: some View {
@@ -201,17 +197,14 @@ struct GraphView: View {
     // MARK: - Exercise Progress Chart
 
     private var exerciseProgressChart: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        LazyVStack(alignment: .leading, spacing: 12) {
             Text("種目別最高重量推移")
                 .font(.headline)
 
-            // 上位10種目を常時表示
-            ForEach(top10Exercises, id: \.self) { name in
+            // 記録のある全種目を実施回数順に表示
+            ForEach(exercisesByFrequency, id: \.self) { name in
                 exerciseCard(name)
             }
-
-            // 11番目: 任意種目ピッカー + グラフ
-            customExerciseCard
         }
     }
 
@@ -237,53 +230,6 @@ struct GraphView: View {
                         y: .value("重量", item.weight)
                     )
                     .foregroundStyle(Color.green)
-                }
-                .frame(height: 100)
-            }
-        }
-        .padding()
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    private var customExerciseCard: some View {
-        let data = maxWeightProgress(for: selectedExerciseName)
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(selectedExerciseName.isEmpty ? "種目を選択" : selectedExerciseName)
-                    .font(.subheadline.bold())
-                Spacer()
-                Menu {
-                    ForEach(allExerciseNames, id: \.self) { name in
-                        Button(name) { selectedExerciseName = name }
-                    }
-                } label: {
-                    Label("種目を選択", systemImage: "chevron.up.chevron.down")
-                        .font(.caption)
-                }
-            }
-            if selectedExerciseName.isEmpty {
-                Text("上のメニューから種目を選択してください")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 80)
-            } else if data.isEmpty {
-                Text("この期間にデータがありません")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 80)
-            } else {
-                Chart(data, id: \.date) { item in
-                    LineMark(
-                        x: .value("日付", item.date),
-                        y: .value("重量", item.weight)
-                    )
-                    .foregroundStyle(Color.accentColor)
-                    PointMark(
-                        x: .value("日付", item.date),
-                        y: .value("重量", item.weight)
-                    )
-                    .foregroundStyle(Color.accentColor)
                 }
                 .frame(height: 100)
             }
