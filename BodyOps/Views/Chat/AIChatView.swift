@@ -14,16 +14,23 @@ struct AIChatView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            Group {
                 if !viewModel.hasAPIKey {
                     apiKeyBanner
                 } else {
+                    // safeAreaInsetで配置するとキーボード表示時もシステムが
+                    // 入力バー全体をキーボードの上に保つ（部分的に隠れる不具合の対策）
                     messageList
-                    Divider()
-                    inputBar
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            VStack(spacing: 0) {
+                                Divider()
+                                inputBar
+                            }
+                            .background(.bar)
+                        }
                 }
             }
-            .navigationTitle("AIアドバイス")
+            .navigationTitle("AIコーチ")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
