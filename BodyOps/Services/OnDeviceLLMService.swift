@@ -22,11 +22,24 @@ struct OnDeviceLLMService {
         return lines.joined(separator: "\n")
     }
 
+    /// FoundationModelsのエラーをアプリ共通のLLMErrorへマップする。
+    /// 型名に依存しない判定（enumケース名はSDKバージョンで変わりうるため文字列で判定）
+    static func mapError(_ error: Error) -> LLMError {
+        if String(describing: error).localizedCaseInsensitiveContains("contextwindow") {
+            return .contextTooLong
+        }
+        return .serverError
+    }
+
     /// 単発の応答（接続テスト・フォールバック用）
     func respond(messages: [LLMMessage], system: String) async throws -> String {
         let session = LanguageModelSession(instructions: system)
-        let response = try await session.respond(to: Self.buildPrompt(messages: messages))
-        return response.content
+        do {
+            let response = try await session.respond(to: Self.buildPrompt(messages: messages))
+            return response.content
+        } catch {
+            throw Self.mapError(error)
+        }
     }
 
     /// ストリーミング応答。FoundationModelsのスナップショットは累積テキストのため、
@@ -49,7 +62,7 @@ struct OnDeviceLLMService {
                 } catch is CancellationError {
                     continuation.finish()
                 } catch {
-                    continuation.finish(throwing: LLMError.serverError)
+                    continuation.finish(throwing: Self.mapError(error))
                 }
             }
             continuation.onTermination = { _ in task.cancel() }

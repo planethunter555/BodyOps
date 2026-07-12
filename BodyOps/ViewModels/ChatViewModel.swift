@@ -253,6 +253,29 @@ final class ChatViewModel {
         // 今回のユーザーメッセージ
         result.append(LLMMessage(role: "user", content: currentText, imageData: imageData))
 
+        return Self.normalizedForAPI(result)
+    }
+
+    /// LLM APIの要求形式に合わせて履歴を正規化する。
+    /// - 空メッセージを除外（送信失敗時などに空のまま残ったもの）
+    /// - 先頭はuserでなければならない
+    /// - 同じroleの連続はマージ（送信失敗でAIの返信が無いままuserが続くと400になるプロバイダーがある）
+    static func normalizedForAPI(_ messages: [LLMMessage]) -> [LLMMessage] {
+        var result: [LLMMessage] = []
+        for msg in messages {
+            let isEmpty = msg.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            guard !isEmpty || msg.imageData != nil else { continue }
+            if result.isEmpty && msg.role != "user" { continue }
+            if let last = result.last, last.role == msg.role {
+                result[result.count - 1] = LLMMessage(
+                    role: msg.role,
+                    content: last.content.isEmpty ? msg.content : last.content + "\n\n" + msg.content,
+                    imageData: msg.imageData ?? last.imageData
+                )
+            } else {
+                result.append(msg)
+            }
+        }
         return result
     }
 
@@ -301,8 +324,11 @@ final class ChatViewModel {
         switch error {
         case .unauthorized: return "APIキーが無効です。設定タブで確認してください。"
         case .rateLimited: return "リクエストが多すぎます。しばらく待ってから再試行してください。"
+        case .badRequest(let status):
+            return "リクエストエラー(コード\(status))が発生しました。解決しない場合は「新しい会話」を開始するか、設定でモデルを変更してみてください。"
         case .serverError: return "サーバーエラーが発生しました。再試行してください。"
         case .networkError: return "ネットワークエラーです。接続を確認してください。"
+        case .contextTooLong: return "会話が長くなりすぎました。「新しい会話」を開始してください。"
         }
     }
 

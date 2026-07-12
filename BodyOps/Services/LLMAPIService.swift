@@ -54,8 +54,13 @@ struct LLMMessage: Sendable {
 enum LLMError: Error, Equatable {
     case unauthorized
     case rateLimited
+    /// 4xx（リクエスト不正など）。ステータスコードを保持して原因の切り分けに使う
+    case badRequest(status: Int)
+    /// 5xx
     case serverError
     case networkError
+    /// オンデバイスLLMのコンテキスト超過
+    case contextTooLong
 }
 
 /// 真のストリーミングで受信するイベント
@@ -140,6 +145,8 @@ final class LLMAPIService: @unchecked Sendable {
                         continuation.finish(throwing: LLMError.unauthorized)
                     case 429:
                         continuation.finish(throwing: LLMError.rateLimited)
+                    case 400..<500:
+                        continuation.finish(throwing: LLMError.badRequest(status: httpResponse.statusCode))
                     default:
                         continuation.finish(throwing: LLMError.serverError)
                     }
@@ -177,6 +184,7 @@ final class LLMAPIService: @unchecked Sendable {
                     case 200: break
                     case 401: throw LLMError.unauthorized
                     case 429: throw LLMError.rateLimited
+                    case 400..<500: throw LLMError.badRequest(status: httpResponse.statusCode)
                     default: throw LLMError.serverError
                     }
 
@@ -317,6 +325,7 @@ final class LLMAPIService: @unchecked Sendable {
         case 200: return try extractResponse(from: data, provider: provider)
         case 401: throw LLMError.unauthorized
         case 429: throw LLMError.rateLimited
+        case 400..<500: throw LLMError.badRequest(status: httpResponse.statusCode)
         default:  throw LLMError.serverError
         }
     }

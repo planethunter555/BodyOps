@@ -342,8 +342,10 @@ struct AISettingsSections: View {
             switch error {
             case .unauthorized: connectionTestResult = "❌ APIキーが無効です"
             case .rateLimited: connectionTestResult = "⚠️ レート制限中。しばらく待ってください"
+            case .badRequest(let status): connectionTestResult = "❌ リクエストエラー(コード\(status))。モデルを変更してみてください"
             case .serverError: connectionTestResult = "❌ サーバーエラー"
             case .networkError: connectionTestResult = "❌ ネットワークエラー"
+            case .contextTooLong: connectionTestResult = "❌ コンテキスト超過"
             }
         } catch {
             connectionTestResult = "❌ 接続失敗"
