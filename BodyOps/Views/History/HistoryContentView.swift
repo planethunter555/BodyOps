@@ -3,14 +3,15 @@ import SwiftData
 
 extension WorkoutSession: Identifiable {}
 
-struct HistoryView: View {
+/// 「記録」タブの「カレンダー」モードの中身。
+/// NavigationStack は RecordTabView が持つため、ここでは持たない。
+struct HistoryContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \WorkoutSession.date, order: .reverse) private var allSessions: [WorkoutSession]
     @Query(sort: \MealRecord.recordedAt, order: .reverse) private var allMeals: [MealRecord]
 
     @State private var currentMonth: Date = Calendar.current.startOfMonth(for: Date())
     @State private var selectedDate: Date?
-    @State private var showGraphView = false
     @State private var showCSVImport = false
     @State private var editingSession: WorkoutSession?
     @State private var showWorkoutSheet = false
@@ -22,8 +23,7 @@ struct HistoryView: View {
     let categories = ["胸", "背中", "脚", "肩", "腕", "腹"]
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 16) {
                     calendarSection
                     if let date = selectedDate {
@@ -33,26 +33,14 @@ struct HistoryView: View {
                 }
                 .padding()
             }
-            .navigationTitle("履歴")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showGraphView = true
-                    } label: {
-                        Label("グラフで見る", systemImage: "chart.xyaxis.line")
-                    }
-                }
-                ToolbarItem(placement: .secondaryAction) {
                     Button {
                         showCSVImport = true
                     } label: {
                         Label("CSVインポート", systemImage: "square.and.arrow.down")
                     }
                 }
-            }
-            .navigationDestination(isPresented: $showGraphView) {
-                GraphView()
             }
             .sheet(isPresented: $showCSVImport) {
                 CSVImportSheet()
@@ -95,7 +83,6 @@ struct HistoryView: View {
             } message: {
                 Text("この食事記録を削除しますか？この操作は取り消せません。")
             }
-        }
     }
 
     private var calendarSection: some View {

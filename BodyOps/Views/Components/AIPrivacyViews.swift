@@ -6,6 +6,7 @@ enum AIConsentStorage {
 
 struct AIConsentSheet: View {
     let providerName: String
+    var isOnDevice: Bool = false
     let onAgree: () -> Void
     let onCancel: () -> Void
 
@@ -13,10 +14,13 @@ struct AIConsentSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Label("AI機能で送信される情報", systemImage: "brain.head.profile")
+                    Label(isOnDevice ? "AI機能で利用される情報" : "AI機能で送信される情報",
+                          systemImage: "brain.head.profile")
                         .font(.headline)
 
-                    Text("AIアドバイスや食事推定を利用すると、以下の情報が選択中のAIプロバイダーへ送信される場合があります。")
+                    Text(isOnDevice
+                         ? "AIアドバイスや食事推定では、以下の情報がAIの入力として利用されます。"
+                         : "AIアドバイスや食事推定を利用すると、以下の情報が選択中のAIプロバイダーへ送信される場合があります。")
                         .foregroundStyle(.secondary)
 
                     consentList([
@@ -29,17 +33,24 @@ struct AIConsentSheet: View {
                     ])
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("送信先")
+                        Text(isOnDevice ? "処理場所" : "送信先")
                             .font(.subheadline.bold())
                         Text("現在選択中のAIプロバイダー: \(providerName)")
-                        Text("Claude (Anthropic)、ChatGPT (OpenAI)、Gemini (Google) のうち、設定画面で選択したプロバイダーへ送信されます。")
-                            .foregroundStyle(.secondary)
+                        if isOnDevice {
+                            Text("Apple Intelligence（オンデバイス）ではAI処理がすべて端末内で行われ、上記の情報が端末外へ送信されることはありません。")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("Claude (Anthropic)、ChatGPT (OpenAI)、Gemini (Google) のうち、設定画面で選択したプロバイダーへ送信されます。")
+                                .foregroundStyle(.secondary)
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("APIキーと通常記録")
                             .font(.subheadline.bold())
-                        Text("APIキーは端末内のiOS Keychainに保存され、開発者のサーバーには保存されません。")
+                        if !isOnDevice {
+                            Text("APIキーは端末内のiOS Keychainに保存され、開発者のサーバーには保存されません。")
+                        }
                         Text("同意しない場合、AI機能は利用できませんが、筋トレ・食事・体重などの通常記録は利用できます。")
                             .foregroundStyle(.secondary)
                         Text("同意は設定画面からいつでも解除できます。")
@@ -49,7 +60,7 @@ struct AIConsentSheet: View {
                 }
                 .padding()
             }
-            .navigationTitle("AIデータ送信の同意")
+            .navigationTitle(isOnDevice ? "AI利用の同意" : "AIデータ送信の同意")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

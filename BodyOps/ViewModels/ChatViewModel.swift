@@ -2,6 +2,14 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+/// ストリーミング中の進行状態（インジケータ表示用）
+enum ChatStreamPhase {
+    case idle
+    case connecting
+    case thinking
+    case streaming
+}
+
 @Observable
 @MainActor
 final class ChatViewModel {
@@ -13,37 +21,84 @@ final class ChatViewModel {
     var pendingImageData: Data?
     var currentSessionTag: String = UUID().uuidString
     var hasConfiguredAPIKey = false
+    var streamPhase: ChatStreamPhase = .idle
 
     // MARK: - Private
     private var context: ModelContext?
-    private let llmService = LLMAPIService()
+    private var streamTask: Task<Void, Never>?
+    private var hasPruned = false
+    private static let sessionTagKey = "currentChatSessionTag"
 
     // MARK: - Setup
 
     func setup(context: ModelContext) {
         self.context = context
+        restoreSessionTag()
         refreshConfigurationState()
         loadCurrentSessionMessages()
+        // 起動ごとに1回だけ保持ポリシーを適用（古いセッション/画像データの削除）
+        if !hasPruned {
+            hasPruned = true
+            ChatHistoryStore.prune(in: context, keepingCurrent: currentSessionTag)
+        }
+    }
+
+    /// 前回のセッションタグを復元する（再起動しても会話が消えないように）
+    private func restoreSessionTag() {
+        if let stored = UserDefaults.standard.string(forKey: Self.sessionTagKey), !stored.isEmpty {
+            currentSessionTag = stored
+        } else {
+            UserDefaults.standard.set(currentSessionTag, forKey: Self.sessionTagKey)
+        }
+    }
+
+    private func persistSessionTag() {
+        UserDefaults.standard.set(currentSessionTag, forKey: Self.sessionTagKey)
     }
 
     func refreshConfigurationState() {
-        let setting = fetchLLMSetting()
-        hasConfiguredAPIKey = KeychainService.shared.load(forProvider: setting.provider) != nil
+        hasConfiguredAPIKey = AIClient(setting: fetchLLMSetting()).isConfigured
+    }
+
+    /// 現在のプロバイダーが画像入力に対応しているか
+    var supportsImageInput: Bool {
+        AIClient(setting: fetchLLMSetting()).supportsVision
+    }
+
+    /// 現在のプロバイダーがオンデバイス（データを端末外へ送信しない）か
+    var isOnDeviceProvider: Bool {
+        fetchLLMSetting().provider == .appleOnDevice
+    }
+
+    /// 未設定時にバナーへ表示する案内文
+    var configurationHint: String {
+        AIClient(setting: fetchLLMSetting()).configurationHint
     }
 
     // MARK: - Send Message
+
+    /// 送信を開始する（停止できるようタスクを保持する）
+    func send() {
+        streamTask = Task { await sendMessage() }
+    }
+
+    /// ストリーミングを停止する。受信済みの部分テキストは保持される。
+    func stopStreaming() {
+        streamTask?.cancel()
+    }
 
     func sendMessage() async {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || pendingImageData != nil else { return }
         guard let context else { return }
 
-        // APIキー確認
+        // 送信可能か確認（クラウド: APIキー / オンデバイス: モデル利用可否）
         let setting = fetchLLMSetting()
+        let client = AIClient(setting: setting)
         let apiKey = KeychainService.shared.load(forProvider: setting.provider) ?? ""
-        guard !apiKey.isEmpty else {
+        guard client.isConfigured else {
             hasConfiguredAPIKey = false
-            errorMessage = "APIキーが設定されていません。設定タブで入力してください。"
+            errorMessage = client.configurationHint
             return
         }
         hasConfiguredAPIKey = true
@@ -52,6 +107,16 @@ final class ChatViewModel {
         inputText = ""
         pendingImageData = nil
         errorMessage = nil
+
+        // 履歴は今回のメッセージを保存する前に取得する（重複送信を防ぐ）
+        // オンデバイスはコンテキストが小さいためプロンプトをコンパクト化し履歴を絞る
+        let systemPrompt = SystemPromptBuilder(context: context).build(compact: client.isOnDevice)
+        let apiMessages = buildAPIMessages(
+            currentText: text,
+            imageData: client.supportsVision ? imageData : nil,
+            historyLimit: client.isOnDevice ? 4 : 8,
+            context: context
+        )
 
         // ユーザーメッセージをUI＆DBに追加
         let userBubble = ChatBubbleItem(role: "user", content: text, imageData: imageData)
@@ -64,41 +129,67 @@ final class ChatViewModel {
         let assistantIndex = messages.count - 1
 
         isLoading = true
-        defer { isLoading = false }
+        streamPhase = .connecting
+        defer {
+            isLoading = false
+            streamPhase = .idle
+        }
+        let providerRaw = setting.provider.rawValue
+        let modelNameCopy = setting.modelName
+
+        var receivedText = ""
+        var receivedThinking = ""
+        var usageInput = 0
+        var usageOutput = 0
 
         do {
-            let systemPrompt = buildSystemPrompt(context: context)
-            let apiMessages = buildAPIMessages(currentText: text, imageData: imageData, context: context)
-
-            let providerRaw = setting.provider.rawValue
-            let modelNameCopy = setting.modelName
-            let response = try await llmService.sendOnce(
+            let stream = client.stream(
                 messages: apiMessages,
                 system: systemPrompt,
-                provider: setting.provider,
-                apiKey: apiKey,
-                modelName: setting.modelName
+                apiKey: apiKey
             )
+            for try await event in stream {
+                switch event {
+                case .thinking(let delta):
+                    receivedThinking += delta
+                    messages[assistantIndex].thinking = receivedThinking
+                    if streamPhase == .connecting { streamPhase = .thinking }
+                case .text(let delta):
+                    receivedText += delta
+                    messages[assistantIndex].content = receivedText
+                    streamPhase = .streaming
+                case .usage(let input, let output):
+                    usageInput = input
+                    usageOutput = output
+                }
+            }
 
-            let record = APIUsageRecord(
-                provider: providerRaw,
-                modelName: modelNameCopy,
-                inputTokens: response.inputTokens,
-                outputTokens: response.outputTokens
-            )
-            context.insert(record)
-            try? context.save()
+            if usageInput > 0 || usageOutput > 0 {
+                let record = APIUsageRecord(
+                    provider: providerRaw,
+                    modelName: modelNameCopy,
+                    inputTokens: usageInput,
+                    outputTokens: usageOutput
+                )
+                context.insert(record)
+                try? context.save()
+            }
 
-            let responseText = response.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let responseText = receivedText.trimmingCharacters(in: .whitespacesAndNewlines)
             if responseText.isEmpty {
                 messages[assistantIndex].content = "応答が空でした。モデルを変更するか、時間をおいて再試行してください。"
             } else {
                 messages[assistantIndex].content = responseText
             }
-
             saveMessage(role: "assistant", content: messages[assistantIndex].content, imageData: nil, context: context)
         } catch let error as LLMError {
-            messages[assistantIndex].content = errorText(for: error)
+            // 途中まで受信できていれば部分テキストを保持してエラー行を追記する
+            if receivedText.isEmpty {
+                messages[assistantIndex].content = errorText(for: error)
+            } else {
+                messages[assistantIndex].content = receivedText + "\n\n⚠️ " + errorText(for: error)
+                saveMessage(role: "assistant", content: receivedText, imageData: nil, context: context)
+            }
             errorMessage = errorText(for: error)
         } catch {
             messages[assistantIndex].content = "エラーが発生しました。再試行してください。"
@@ -109,15 +200,40 @@ final class ChatViewModel {
 
     func startNewChat() {
         currentSessionTag = UUID().uuidString
+        persistSessionTag()
         messages = []
         errorMessage = nil
     }
 
-    // MARK: - Context Building
+    // MARK: - Session History
 
-    private func buildSystemPrompt(context: ModelContext) -> String {
-        SystemPromptBuilder(context: context).build()
+    /// 過去のセッションを読み込んで表示する（続きから送信も可能）
+    func loadSession(tag: String) {
+        guard let context else { return }
+        stopStreaming()
+        currentSessionTag = tag
+        persistSessionTag()
+        errorMessage = nil
+        let stored = ChatHistoryStore.messages(tag: tag, in: context)
+        messages = stored.map { ChatBubbleItem(role: $0.role, content: $0.content, imageData: $0.imageData) }
     }
+
+    /// セッション一覧（履歴シート用）
+    func sessionSummaries() -> [ChatSessionSummary] {
+        guard let context else { return [] }
+        return ChatHistoryStore.sessions(in: context)
+    }
+
+    /// セッションを削除する。現在表示中のセッションを消した場合は新規会話に切り替える。
+    func deleteSession(tag: String) {
+        guard let context else { return }
+        ChatHistoryStore.deleteSession(tag: tag, in: context)
+        if tag == currentSessionTag {
+            startNewChat()
+        }
+    }
+
+    // MARK: - Context Building
 
     /// デバッグ用: 現在のシステムプロンプトを返す
     func previewSystemPrompt() -> String {
@@ -125,11 +241,11 @@ final class ChatViewModel {
         return SystemPromptBuilder(context: context).build()
     }
 
-    private func buildAPIMessages(currentText: String, imageData: Data?, context: ModelContext) -> [LLMMessage] {
+    private func buildAPIMessages(currentText: String, imageData: Data?, historyLimit: Int = 8, context: ModelContext) -> [LLMMessage] {
         var result: [LLMMessage] = []
 
-        // 過去1週間の会話履歴（画像は除外してテキストのみ送信 - メモリ節約）
-        let history = fetchWeeklyHistory(context: context)
+        // 現在のセッションの直近履歴（画像は除外してテキストのみ送信 - メモリ節約）
+        let history = fetchSessionHistory(limit: historyLimit, context: context)
         for msg in history {
             result.append(LLMMessage(role: msg.role, content: msg.content, imageData: nil))
         }
@@ -147,15 +263,16 @@ final class ChatViewModel {
         return (try? LLMSettingsStore.current(in: context)) ?? LLMSetting()
     }
 
-    private func fetchWeeklyHistory(context: ModelContext) -> [ChatMessage] {
-        let oneWeekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+    /// LLMに渡す会話コンテキスト。現在のセッション内の直近N件に限定する
+    /// （セッションをまたぐと文脈が混ざるため、セッション内スコープとする）
+    private func fetchSessionHistory(limit: Int, context: ModelContext) -> [ChatMessage] {
+        let tag = currentSessionTag
         let descriptor = FetchDescriptor<ChatMessage>(
-            predicate: #Predicate { $0.createdAt >= oneWeekAgo },
+            predicate: #Predicate { $0.sessionTag == tag },
             sortBy: [SortDescriptor(\.createdAt)]
         )
-        // 最新の会話のみ（コンテキスト肥大化防止で最大8件）
         let all = (try? context.fetch(descriptor)) ?? []
-        return Array(all.suffix(8))
+        return Array(all.suffix(limit))
     }
 
     // MARK: - Persistence
@@ -211,6 +328,8 @@ struct ChatBubbleItem: Identifiable {
     var role: String
     var content: String
     var imageData: Data?
+    /// Claudeのadaptive thinking（要約された思考）テキスト
+    var thinking: String?
 
     var isUser: Bool { role == "user" }
 }

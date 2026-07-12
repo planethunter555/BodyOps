@@ -23,21 +23,33 @@ final class ExercisePresetServiceTests: XCTestCase {
         super.tearDown()
     }
 
-    // TC-01: 初回実行で60種目が投入される
-    func test_seedIfNeeded_insertsExactly60Exercises() throws {
+    // TC-01: 初回実行でExercisePresets.jsonの全種目が投入される
+    func test_seedIfNeeded_insertsAllPresets() throws {
         try service.seedIfNeeded()
 
         let count = try context.fetchCount(FetchDescriptor<Exercise>())
-        XCTAssertEqual(count, 60)
+        XCTAssertEqual(count, presetCountInBundle())
     }
 
     // TC-02: 2回呼んでも重複しない
     func test_seedIfNeeded_isIdempotent() throws {
         try service.seedIfNeeded()
-        try service.seedIfNeeded()
+        let firstCount = try context.fetchCount(FetchDescriptor<Exercise>())
 
-        let count = try context.fetchCount(FetchDescriptor<Exercise>())
-        XCTAssertEqual(count, 60, "2回実行しても60件のまま")
+        try service.seedIfNeeded()
+        let secondCount = try context.fetchCount(FetchDescriptor<Exercise>())
+
+        XCTAssertEqual(secondCount, firstCount, "2回実行しても件数が増えない")
+    }
+
+    private func presetCountInBundle() -> Int {
+        guard let url = Bundle.main.url(forResource: "ExercisePresets", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let entries = try? JSONDecoder().decode([ExercisePresetEntry].self, from: data) else {
+            XCTFail("ExercisePresets.jsonが読み込めない")
+            return -1
+        }
+        return entries.count
     }
 
     // TC-03: 全種目がisPreset = true

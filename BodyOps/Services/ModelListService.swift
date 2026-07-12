@@ -50,6 +50,7 @@ final class ModelListService: @unchecked Sendable {
         case .claude:  return try await fetchClaudeModels(apiKey: apiKey)
         case .openai:  return try await fetchOpenAIModels(apiKey: apiKey)
         case .gemini:  return try await fetchGeminiModels(apiKey: apiKey)
+        case .appleOnDevice: return []  // オンデバイスはモデル一覧なし
         }
     }
 
@@ -106,6 +107,7 @@ final class ModelListService: @unchecked Sendable {
         case .claude:  return filterClaude(models)
         case .openai:  return filterOpenAI(models)
         case .gemini:  return filterGemini(models)
+        case .appleOnDevice: return []
         }
     }
 

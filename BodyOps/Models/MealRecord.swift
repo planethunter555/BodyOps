@@ -11,7 +11,6 @@ final class MealRecord {
     var fat: Double
     var carbs: Double
     var mealType: String
-    var aiAnalysis: String
     var recordedAt: Date
 
     init(
@@ -29,7 +28,6 @@ final class MealRecord {
         self.protein = protein
         self.fat = fat
         self.carbs = carbs
-        self.aiAnalysis = ""
         self.recordedAt = Date()
     }
 }
