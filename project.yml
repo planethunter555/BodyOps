@@ -9,8 +9,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "2.0.0"
+    CURRENT_PROJECT_VERSION: "2"
 
 targets:
   BodyOps:
@@ -25,7 +25,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bodyops.app
         INFOPLIST_FILE: BodyOps/Resources/Info.plist
-        DEVELOPMENT_TEAM: ""
+        # Apple Developer Team ID（xcodegen再生成でXcode上の署名設定が消えないようここに固定）
+        DEVELOPMENT_TEAM: "9472GD6P88"
         SWIFT_EMIT_LOC_STRINGS: YES
         # FoundationModels(iOS 26+)は #if canImport + @available ガードにより
         # iOS 26 SDKビルド時に自動でweak linkされる（明示フラグは旧SDKでリンクエラーになるため付けない）
