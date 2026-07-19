@@ -51,15 +51,26 @@ struct MealConfirmView: View {
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
             // 数値キーボードにはリターンキーが無いため「完了」を用意する。
+            // テキスト欄は改行/確定キーがあり、そちらと「完了」が重なるので表示しない。
             // 「クリア」は編集中の欄をワンタップで空にする（削除の手間対策）
             ToolbarItemGroup(placement: .keyboard) {
-                Button("クリア") { clearFocusedField() }
-                Spacer()
-                Button("完了") { focusedField = nil }
+                if isNumericFieldFocused {
+                    Button("クリア") { clearFocusedField() }
+                    Spacer()
+                    Button("完了") { focusedField = nil }
+                }
             }
         }
         .safeAreaInset(edge: .bottom) {
             saveArea
+        }
+    }
+
+    /// 数値（decimalPad）欄にフォーカスがあるか。テキスト欄には改行キーがあるため区別する。
+    private var isNumericFieldFocused: Bool {
+        switch focusedField {
+        case .calories, .protein, .fat, .carbs: return true
+        case .description, nil: return false
         }
     }
 
