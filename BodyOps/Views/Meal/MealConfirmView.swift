@@ -50,14 +50,34 @@ struct MealConfirmView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
-            // 数値キーボードにはリターンキーが無いため「完了」を用意する
+            // 数値キーボードにはリターンキーが無いため「完了」を用意する。
+            // 「クリア」は編集中の欄をワンタップで空にする（削除の手間対策）
             ToolbarItemGroup(placement: .keyboard) {
+                Button("クリア") { clearFocusedField() }
                 Spacer()
                 Button("完了") { focusedField = nil }
             }
         }
         .safeAreaInset(edge: .bottom) {
-            saveButton
+            saveArea
+        }
+    }
+
+    /// AIモード（写真/テキスト）では、推定を実行するまで保存できないようにする。
+    /// 推定に失敗した場合や、栄養素を手で入力済みの場合は保存を許可する。
+    private var needsEstimationBeforeSave: Bool {
+        guard !isEditMode, mode == .textAI || mode == .photo else { return false }
+        return !viewModel.estimationAttempted && !viewModel.hasNutritionInput
+    }
+
+    private func clearFocusedField() {
+        switch focusedField {
+        case .description: viewModel.mealDescription = ""
+        case .calories: viewModel.calories = 0
+        case .protein: viewModel.protein = 0
+        case .fat: viewModel.fat = 0
+        case .carbs: viewModel.carbs = 0
+        case nil: break
         }
     }
 
@@ -238,18 +258,25 @@ struct MealConfirmView: View {
         .onTapGesture { focusedField = field }
     }
 
-    private var saveButton: some View {
-        Button {
-            focusedField = nil
-            onSave()
-        } label: {
-            Label(isEditMode ? "変更を保存" : "この内容で保存", systemImage: "checkmark.circle.fill")
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
+    private var saveArea: some View {
+        VStack(spacing: 6) {
+            if needsEstimationBeforeSave && viewModel.canSave {
+                Text("先に「AIで栄養を推定」を実行してください")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Button {
+                focusedField = nil
+                onSave()
+            } label: {
+                Label(isEditMode ? "変更を保存" : "この内容で保存", systemImage: "checkmark.circle.fill")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+            .disabled(!viewModel.canSave || viewModel.isEstimating || needsEstimationBeforeSave)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(.green)
-        .disabled(!viewModel.canSave || viewModel.isEstimating)
         .padding()
         .background(.bar)
     }

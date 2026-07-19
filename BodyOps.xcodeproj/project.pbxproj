@@ -19,6 +19,7 @@
 		1530D3439B2DB0578C7FE89C /* SystemPromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC11384FB32B634570602025 /* SystemPromptBuilder.swift */; };
 		16DE3CF1624659F3199827B9 /* MealConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778DE0C2EF7E3FEC4B29B179 /* MealConfirmView.swift */; };
 		1787B4B5AB405462623A1A57 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122D8B90907DED0A4F6BF160 /* ContentView.swift */; };
+		17CEABDCBB50C9C45146A721 /* KeyboardDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62291787D54BEFB76D77731 /* KeyboardDismiss.swift */; };
 		1B3800E8372352B996171DD3 /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0441871ABDC563C063788A35 /* KeychainServiceTests.swift */; };
 		2014215565BA8B79E99AF6FD /* WorkoutEntryStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E744935E05F0E2B82D76468B /* WorkoutEntryStartView.swift */; };
 		21C9E90D4820732B497307CA /* MonthCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B0A28A2DEDD9A1BEDAF04E /* MonthCalendarView.swift */; };
@@ -138,6 +139,7 @@
 		C30A0B031BF2AE537623017C /* LLMAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMAPIService.swift; sourceTree = "<group>"; };
 		C4F7469FDBF46270EE08B625 /* WorkoutPrefillService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPrefillService.swift; sourceTree = "<group>"; };
 		D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSetting.swift; sourceTree = "<group>"; };
+		D62291787D54BEFB76D77731 /* KeyboardDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardDismiss.swift; sourceTree = "<group>"; };
 		D80AE13CA86E0212DD1FB759 /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		DBB58E2EAB4AE8447D07856B /* WorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSession.swift; sourceTree = "<group>"; };
 		DC11384FB32B634570602025 /* SystemPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPromptBuilder.swift; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 			children = (
 				EAB9C8CFCFC5FA086ED59D1A /* CalendarExtensions.swift */,
 				05114FB97BFE953DB1E69375 /* ImageCompressor.swift */,
+				D62291787D54BEFB76D77731 /* KeyboardDismiss.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -502,6 +505,7 @@
 				FB71C647D30D9FA28F315CCF /* GraphView.swift in Sources */,
 				FFFFB57C485F0971793DB58A /* HistoryContentView.swift in Sources */,
 				08CEBD7A5613D06931361D08 /* ImageCompressor.swift in Sources */,
+				17CEABDCBB50C9C45146A721 /* KeyboardDismiss.swift in Sources */,
 				AE4A7D1830E634D56900F9D7 /* KeychainService.swift in Sources */,
 				63211D5E371BE96A68E9E670 /* LLMAPIService.swift in Sources */,
 				B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */,

@@ -21,6 +21,8 @@ struct AIChatView: View {
                     // safeAreaInsetで配置するとキーボード表示時もシステムが
                     // 入力バー全体をキーボードの上に保つ（部分的に隠れる不具合の対策）
                     messageList
+                        .scrollDismissesKeyboard(.interactively)
+                        .keyboardDoneButton()
                         .safeAreaInset(edge: .bottom, spacing: 0) {
                             VStack(spacing: 0) {
                                 Divider()

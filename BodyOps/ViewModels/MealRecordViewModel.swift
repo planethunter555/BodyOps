@@ -85,10 +85,19 @@ final class MealRecordViewModel {
         return isEstimating || (empty && imageData == nil)
     }
 
+    /// 栄養素が1つでも入力されているか
+    var hasNutritionInput: Bool {
+        calories > 0 || protein > 0 || fat > 0 || carbs > 0
+    }
+
+    /// AI推定を一度でも実行したか（成功・失敗を問わない）
+    var estimationAttempted: Bool {
+        estimationSucceeded || estimationError != nil
+    }
+
     var canSave: Bool {
-        let hasNutrition = calories > 0 || protein > 0 || fat > 0 || carbs > 0
         let hasDescription = !mealDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        return hasNutrition || hasDescription || imageData != nil
+        return hasNutritionInput || hasDescription || imageData != nil
     }
 
     func estimatePFC(context: ModelContext) async {

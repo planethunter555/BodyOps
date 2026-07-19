@@ -41,6 +41,8 @@ struct WorkoutRecordSheet: View {
                         addExerciseSection
                         memoSection
                     }
+                    .scrollDismissesKeyboard(.interactively)
+                    .keyboardDoneButton()
                 }
             }
             .navigationTitle(isEditMode ? "記録を編集" : "筋トレ記録")

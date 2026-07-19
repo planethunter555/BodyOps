@@ -43,6 +43,7 @@ struct SettingsView: View {
                 ExerciseManagementSection()
             }
             .scrollDismissesKeyboard(.immediately)
+            .keyboardDoneButton()
             .navigationTitle("設定")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { loadCurrentValues() }
