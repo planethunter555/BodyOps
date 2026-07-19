@@ -26,6 +26,14 @@ final class AppStoreScreenshotTests: XCTestCase {
             app.buttons["筋トレを記録する"].tap()
             sleep(2)
             capture("02_workout_start")
+
+            // 2b. 前回メニューを読み込んでセット入力画面をキャプチャ
+            let loadButton = app.buttons["前回のメニューを読み込む"]
+            if loadButton.waitForExistence(timeout: 5) {
+                loadButton.tap()
+                sleep(2)
+                capture("02b_workout_input")
+            }
             dismissSheet()
         }
 
