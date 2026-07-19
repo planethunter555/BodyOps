@@ -13,7 +13,8 @@ struct MealInputMethodView: View {
     let onPickFromLibrary: () -> Void
     let onChooseTextAI: () -> Void
     let onChooseManual: () -> Void
-    let onCopyMeal: (MealRecord) -> Void
+    let onEditMeal: (MealRecord) -> Void
+    let onDeleteMeal: (MealRecord) -> Void
 
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
 
@@ -64,7 +65,7 @@ struct MealInputMethodView: View {
 
                 HStack {
                     VStack { Divider() }
-                    Text("過去の食事からコピー")
+                    Text("記録した食事を編集・削除")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize()
@@ -149,7 +150,7 @@ struct MealInputMethodView: View {
 
     private var calendarCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("日付を選ぶと、その日の食事を再利用できます")
+            Text("日付を選ぶと、その日の食事を確認・編集できます")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             MonthCalendarView(selectedDate: $selectedDate, markedDates: mealDates, dotColor: .orange)
@@ -160,39 +161,48 @@ struct MealInputMethodView: View {
     }
 
     private var dayMealsCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("\(Self.fmtDate(selectedDate)) の食事")
                 .font(.subheadline.bold())
 
             ForEach(mealsOfSelectedDay) { meal in
-                Button {
-                    onCopyMeal(meal)
-                } label: {
-                    HStack(spacing: 8) {
-                        Text(MealType(rawValue: meal.mealType)?.label ?? meal.mealType)
-                            .font(.caption.bold())
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Color.green.opacity(0.15))
-                            .foregroundStyle(.green)
-                            .clipShape(Capsule())
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(meal.mealDescription.isEmpty ? "（写真のみ）" : meal.mealDescription)
-                                .font(.caption)
-                                .foregroundStyle(.primary)
-                                .lineLimit(1)
-                            Text("\(Int(meal.calories))kcal  P\(Int(meal.protein)) F\(Int(meal.fat)) C\(Int(meal.carbs))")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Label("コピー", systemImage: "doc.on.doc")
+                HStack(spacing: 8) {
+                    Text(MealType(rawValue: meal.mealType)?.label ?? meal.mealType)
+                        .font(.caption.bold())
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.green.opacity(0.15))
+                        .foregroundStyle(.green)
+                        .clipShape(Capsule())
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(meal.mealDescription.isEmpty ? "（写真のみ）" : meal.mealDescription)
                             .font(.caption)
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        Text("\(Int(meal.calories))kcal  P\(Int(meal.protein)) F\(Int(meal.fat)) C\(Int(meal.carbs))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
-                    .padding(.vertical, 4)
+                    Spacer(minLength: 4)
+                    Button {
+                        onEditMeal(meal)
+                    } label: {
+                        Image(systemName: "pencil")
+                            .font(.subheadline)
+                            .frame(width: 34, height: 34)
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Color.accentColor)
+                    Button {
+                        onDeleteMeal(meal)
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.subheadline)
+                            .frame(width: 34, height: 34)
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(.red)
                 }
-                .buttonStyle(.plain)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

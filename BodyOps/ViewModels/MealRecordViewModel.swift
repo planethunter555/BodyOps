@@ -202,6 +202,23 @@ final class MealRecordViewModel {
         protein = meal.protein
         fat = meal.fat
         carbs = meal.carbs
+        estimationSucceeded = false
+        estimationError = nil
+        estimationDetails = nil
+    }
+
+    /// 入力内容を初期化する（食事タイプは保持）。編集画面から入力方法選択へ戻る際に使う。
+    func reset() {
+        mealDescription = ""
+        imageData = nil
+        calories = 0
+        protein = 0
+        fat = 0
+        carbs = 0
+        isEstimating = false
+        estimationError = nil
+        estimationSucceeded = false
+        estimationDetails = nil
     }
 
     func update(meal: MealRecord, context: ModelContext) {

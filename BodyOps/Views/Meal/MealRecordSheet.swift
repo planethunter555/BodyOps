@@ -19,6 +19,10 @@ struct MealRecordSheet: View {
     @State private var step: Step = .chooseMethod
     /// 選択された入力方式（確認画面のレイアウトが変わる）
     @State private var entryMode: MealEntryMode = .manual
+    /// 一覧から「編集」で選ばれた既存の食事（実行時に編集モードへ切り替える）
+    @State private var runtimeEditingMeal: MealRecord?
+    /// 一覧から「削除」で選ばれた食事（確認ダイアログ用）
+    @State private var mealToDelete: MealRecord?
     @State private var showAIConsent = false
     @State private var showCamera = false
     @State private var showLibraryPicker = false
@@ -28,7 +32,9 @@ struct MealRecordSheet: View {
     @State private var pendingAutoEstimate = false
     @AppStorage(AIConsentStorage.key) private var hasAIConsent = false
 
-    private var isEditMode: Bool { editingMeal != nil }
+    /// 直接編集で開かれた食事、または一覧から編集で選ばれた食事
+    private var activeEditingMeal: MealRecord? { editingMeal ?? runtimeEditingMeal }
+    private var isEditMode: Bool { activeEditingMeal != nil }
 
     var body: some View {
         NavigationStack {
@@ -52,11 +58,15 @@ struct MealRecordSheet: View {
                             entryMode = .manual
                             step = .confirm
                         },
-                        onCopyMeal: { meal in
-                            // 過去の食事を内容ごとコピーして確認画面へ（日付は記録対象日のまま）
+                        onEditMeal: { meal in
+                            // 既存の食事を編集モードで開く（保存で上書き）
                             viewModel.load(from: meal)
+                            runtimeEditingMeal = meal
                             entryMode = .manual
                             step = .confirm
+                        },
+                        onDeleteMeal: { meal in
+                            mealToDelete = meal
                         }
                     )
                 } else {
@@ -81,10 +91,11 @@ struct MealRecordSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }
                 }
-                if !isEditMode && step == .confirm {
+                // 直接編集で開いた場合を除き、確認画面には入力方法へ戻るボタンを出す
+                if editingMeal == nil && step == .confirm {
                     ToolbarItem(placement: .topBarLeading) {
                         Button {
-                            step = .chooseMethod
+                            backToMethodSelection()
                         } label: {
                             Label("入力方法", systemImage: "chevron.backward")
                         }
@@ -124,10 +135,35 @@ struct MealRecordSheet: View {
                     showAIConsent = false
                 }
             }
+            .confirmationDialog(
+                "この食事を削除しますか？",
+                isPresented: Binding(get: { mealToDelete != nil }, set: { if !$0 { mealToDelete = nil } }),
+                titleVisibility: .visible
+            ) {
+                Button("削除", role: .destructive) {
+                    if let meal = mealToDelete { deleteMeal(meal) }
+                    mealToDelete = nil
+                }
+                Button("キャンセル", role: .cancel) { mealToDelete = nil }
+            }
         }
     }
 
     // MARK: - Actions
+
+    /// 確認画面から入力方法選択へ戻る。実行時編集中なら入力内容をリセットする。
+    private func backToMethodSelection() {
+        if runtimeEditingMeal != nil {
+            runtimeEditingMeal = nil
+            viewModel.reset()
+        }
+        step = .chooseMethod
+    }
+
+    private func deleteMeal(_ meal: MealRecord) {
+        modelContext.delete(meal)
+        try? modelContext.save()
+    }
 
     /// カメラ全画面が閉じてからAI推定を開始する（シート表示の競合を避ける）
     private func cameraDismissed() {
@@ -150,7 +186,7 @@ struct MealRecordSheet: View {
     }
 
     private func save() {
-        if let meal = editingMeal {
+        if let meal = activeEditingMeal {
             viewModel.update(meal: meal, context: modelContext)
         } else {
             viewModel.save(date: date, context: modelContext)
