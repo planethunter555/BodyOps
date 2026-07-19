@@ -50,19 +50,21 @@ struct MealConfirmView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
-            // 数値キーボードにはリターンキーが無いため「完了」を用意する。
-            // テキスト欄は改行/確定キーがあり、そちらと「完了」が重なるので表示しない。
-            // 「クリア」は編集中の欄をワンタップで空にする（削除の手間対策）
+            // 「完了」でキーボードを閉じる（テキスト欄の改行キーは確定ではないため必須）。
+            // 「クリア」は数値欄でワンタップ削除するためのもの（テキスト欄では非表示）。
             ToolbarItemGroup(placement: .keyboard) {
                 if isNumericFieldFocused {
                     Button("クリア") { clearFocusedField() }
-                    Spacer()
-                    Button("完了") { focusedField = nil }
                 }
+                Spacer()
+                Button("完了") { focusedField = nil }
             }
         }
         .safeAreaInset(edge: .bottom) {
-            saveArea
+            // AIモードで推定前のときは保存バーを出さない（AI推定ボタンを覆わないため）
+            if !needsEstimationBeforeSave {
+                saveArea
+            }
         }
     }
 
@@ -270,24 +272,17 @@ struct MealConfirmView: View {
     }
 
     private var saveArea: some View {
-        VStack(spacing: 6) {
-            if needsEstimationBeforeSave && viewModel.canSave {
-                Text("先に「AIで栄養を推定」を実行してください")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Button {
-                focusedField = nil
-                onSave()
-            } label: {
-                Label(isEditMode ? "変更を保存" : "この内容で保存", systemImage: "checkmark.circle.fill")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
-            .disabled(!viewModel.canSave || viewModel.isEstimating || needsEstimationBeforeSave)
+        Button {
+            focusedField = nil
+            onSave()
+        } label: {
+            Label(isEditMode ? "変更を保存" : "この内容で保存", systemImage: "checkmark.circle.fill")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
         }
+        .buttonStyle(.borderedProminent)
+        .tint(.green)
+        .disabled(!viewModel.canSave || viewModel.isEstimating)
         .padding()
         .background(.bar)
     }
