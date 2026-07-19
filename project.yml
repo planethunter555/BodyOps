@@ -25,6 +25,9 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bodyops.app
         INFOPLIST_FILE: BodyOps/Resources/Info.plist
+        # iPhone専用（縦向きのみ対応のため。ユニバーサルだとiPadマルチタスク要件で
+        # 全向き対応が必須になり、App Storeアップロードが弾かれる）
+        TARGETED_DEVICE_FAMILY: "1"
         # Apple Developer Team ID（xcodegen再生成でXcode上の署名設定が消えないようここに固定）
         DEVELOPMENT_TEAM: "9472GD6P88"
         SWIFT_EMIT_LOC_STRINGS: YES
