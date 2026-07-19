@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05F9A583349EAC0BC386EE83 /* ScreenshotSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2456B1B7A0C4ACE41BB3684E /* ScreenshotSeeder.swift */; };
 		06B12AAB2EB390D1863D8251 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2F531606F4408AE0B32B118 /* Assets.xcassets */; };
 		0787761CE9DD46121F7DF8A3 /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD935686F580D50455530119 /* NotificationServiceTests.swift */; };
 		07BB70330042288BB05AAE80 /* ExercisePresetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */; };
@@ -30,6 +31,7 @@
 		337CA0F28A72B51009E6384A /* WorkoutCSVImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB60D85E503124A0A7C3CF4 /* WorkoutCSVImporter.swift */; };
 		3B55CE351B6009C51A0B73AD /* ChatSessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F634A91922DB94A55D3383DF /* ChatSessionListView.swift */; };
 		3EE86521941C8DAC93E56F00 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF56C072AF9DB26469C43DD /* Exercise.swift */; };
+		42A97B918A483FCFBBED8EF5 /* AppStoreScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C1E2A9C4E5E8DB7FDBDE1D /* AppStoreScreenshotTests.swift */; };
 		4739FF50B728C197DD1C7FB3 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2A862B1C88211C117161AC7D /* PrivacyInfo.xcprivacy */; };
 		51DF91DE96C6A4A0E597BE50 /* ExerciseEntrySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF9D900FB568663D1ABEA99C /* ExerciseEntrySection.swift */; };
 		578338BF24C0E45141AB6EFA /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */; };
@@ -77,6 +79,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		126C5F8131FFF9B99E5D4E9F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 347A03A93A608345C7A4E536 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1979765E23FE6B96F54DFF93;
+			remoteInfo = BodyOps;
+		};
 		B4D0929C377897336D82C5BD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 347A03A93A608345C7A4E536 /* Project object */;
@@ -94,6 +103,7 @@
 		1629F4A039635E3B58BFF04C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		17B0A28A2DEDD9A1BEDAF04E /* MonthCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarView.swift; sourceTree = "<group>"; };
 		1C8FE3399E0EFEC79ECEDAB4 /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
+		2456B1B7A0C4ACE41BB3684E /* ScreenshotSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotSeeder.swift; sourceTree = "<group>"; };
 		25BCC8D85B066F0248D6D6BF /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		29F98697CF861353AA08869C /* WorkoutPrefillServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPrefillServiceTests.swift; sourceTree = "<group>"; };
 		2A862B1C88211C117161AC7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -108,6 +118,7 @@
 		3434D42C024B5D50E8310B5B /* MealRecordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealRecordViewModel.swift; sourceTree = "<group>"; };
 		3C6451A38BF9E836AD8A25D8 /* CSVImportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVImportSheet.swift; sourceTree = "<group>"; };
 		41D38DF06BDCDBCE9C251E3D /* ExercisePresets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ExercisePresets.json; sourceTree = "<group>"; };
+		4465A53A8965E2C3FAA48B77 /* BodyOpsUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BodyOpsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		465A3FD33F9A3369CECACB2A /* WorkoutSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSet.swift; sourceTree = "<group>"; };
 		478DD797EBEC237296B4035A /* MealRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealRecord.swift; sourceTree = "<group>"; };
 		4AF56C072AF9DB26469C43DD /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
@@ -136,6 +147,7 @@
 		B2FB3B9310514DD937AC1A21 /* AIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIClient.swift; sourceTree = "<group>"; };
 		B706303810A7484460133DE2 /* WorkoutRecordSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutRecordSheet.swift; sourceTree = "<group>"; };
 		B75D19B800CA7B1FFCE0B0F6 /* AISettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsSections.swift; sourceTree = "<group>"; };
+		C2C1E2A9C4E5E8DB7FDBDE1D /* AppStoreScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshotTests.swift; sourceTree = "<group>"; };
 		C30A0B031BF2AE537623017C /* LLMAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMAPIService.swift; sourceTree = "<group>"; };
 		C4F7469FDBF46270EE08B625 /* WorkoutPrefillService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPrefillService.swift; sourceTree = "<group>"; };
 		D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSetting.swift; sourceTree = "<group>"; };
@@ -181,6 +193,7 @@
 				EAB9C8CFCFC5FA086ED59D1A /* CalendarExtensions.swift */,
 				05114FB97BFE953DB1E69375 /* ImageCompressor.swift */,
 				D62291787D54BEFB76D77731 /* KeyboardDismiss.swift */,
+				2456B1B7A0C4ACE41BB3684E /* ScreenshotSeeder.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -211,6 +224,7 @@
 			children = (
 				FA956562E3C654410F0148EA /* BodyOps */,
 				B4709DD735C05E4DB7EC635B /* BodyOpsTests */,
+				7A924150533501677CA304A0 /* BodyOpsUITests */,
 				87E0155F6C3438B926B52F23 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -245,6 +259,14 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
+		7A924150533501677CA304A0 /* BodyOpsUITests */ = {
+			isa = PBXGroup;
+			children = (
+				C2C1E2A9C4E5E8DB7FDBDE1D /* AppStoreScreenshotTests.swift */,
+			);
+			path = BodyOpsUITests;
+			sourceTree = "<group>";
+		};
 		7C9E6C7A04CAC88EECF3F0FD /* History */ = {
 			isa = PBXGroup;
 			children = (
@@ -270,6 +292,7 @@
 			children = (
 				2F31D880250E0ADFD8D6D675 /* BodyOps.app */,
 				A981C8BADB1F5D7CBFD2E071 /* BodyOpsTests.xctest */,
+				4465A53A8965E2C3FAA48B77 /* BodyOpsUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -377,6 +400,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		18BF191194577AA5484F7EA1 /* BodyOpsUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 802F237F27C3055C245E22B7 /* Build configuration list for PBXNativeTarget "BodyOpsUITests" */;
+			buildPhases = (
+				DE766B0F810479B0F9789172 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				32F92362836298B8476719BA /* PBXTargetDependency */,
+			);
+			name = BodyOpsUITests;
+			packageProductDependencies = (
+			);
+			productName = BodyOpsUITests;
+			productReference = 4465A53A8965E2C3FAA48B77 /* BodyOpsUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		1979765E23FE6B96F54DFF93 /* BodyOps */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EA1FCFF9BBC53C4E0D07DBF2 /* Build configuration list for PBXNativeTarget "BodyOps" */;
@@ -422,6 +463,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					18BF191194577AA5484F7EA1 = {
+						TestTargetID = 1979765E23FE6B96F54DFF93;
+					};
 					1979765E23FE6B96F54DFF93 = {
 						DevelopmentTeam = 9472GD6P88;
 					};
@@ -443,6 +487,7 @@
 			targets = (
 				1979765E23FE6B96F54DFF93 /* BodyOps */,
 				71E50E4AAF8715E6567A3BF0 /* BodyOpsTests */,
+				18BF191194577AA5484F7EA1 /* BodyOpsUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -524,6 +569,7 @@
 				0FB5D9BA3F77F448741F8CB2 /* OnDeviceLLMService.swift in Sources */,
 				5E7992A5395F58C00F6C5864 /* OpenAIPayloads.swift in Sources */,
 				819D94C9433138B347257D4F /* RecordTabView.swift in Sources */,
+				05F9A583349EAC0BC386EE83 /* ScreenshotSeeder.swift in Sources */,
 				7F063A9174161847B153514D /* SetInputRow.swift in Sources */,
 				8F78B0B92558489E4437F546 /* SettingsView.swift in Sources */,
 				1530D3439B2DB0578C7FE89C /* SystemPromptBuilder.swift in Sources */,
@@ -539,9 +585,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DE766B0F810479B0F9789172 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				42A97B918A483FCFBBED8EF5 /* AppStoreScreenshotTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		32F92362836298B8476719BA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1979765E23FE6B96F54DFF93 /* BodyOps */;
+			targetProxy = 126C5F8131FFF9B99E5D4E9F /* PBXContainerItemProxy */;
+		};
 		5334D579598BF681512CEB0C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 1979765E23FE6B96F54DFF93 /* BodyOps */;
@@ -632,6 +691,24 @@
 				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
+		};
+		3C33AC2C77FEAD61772AAA87 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bodyops.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = BodyOps;
+			};
+			name = Release;
 		};
 		5DD9C6E72F8DC150840B9598 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -749,6 +826,24 @@
 			};
 			name = Release;
 		};
+		DEEB1486CB833275EB41B208 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bodyops.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = BodyOps;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -757,6 +852,15 @@
 			buildConfigurations = (
 				2A76D7346D529DAEDA960672 /* Debug */,
 				DEE41084F55AB490CF1723C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		802F237F27C3055C245E22B7 /* Build configuration list for PBXNativeTarget "BodyOpsUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DEEB1486CB833275EB41B208 /* Debug */,
+				3C33AC2C77FEAD61772AAA87 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

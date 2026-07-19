@@ -34,6 +34,9 @@ struct BodyOpsApp: App {
                     .onAppear {
                         let service = ExercisePresetService(context: c.mainContext)
                         try? service.seedIfNeeded()
+                        if ScreenshotSeeder.isEnabled {
+                            ScreenshotSeeder.seed(into: c.mainContext)
+                        }
                     }
                     .modelContainer(c)
             } else {
