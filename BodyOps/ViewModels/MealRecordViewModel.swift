@@ -230,6 +230,7 @@ final class MealRecordViewModel {
         meal.fat = fat
         meal.carbs = carbs
         try? context.save()
+        ICloudExportService.shared.scheduleExport(context: context)
     }
 
     func save(date: Date, context: ModelContext) {
@@ -245,6 +246,7 @@ final class MealRecordViewModel {
         record.recordedAt = resolvedDate(for: date)
         context.insert(record)
         try? context.save()
+        ICloudExportService.shared.scheduleExport(context: context)
     }
 
     // MARK: - Private

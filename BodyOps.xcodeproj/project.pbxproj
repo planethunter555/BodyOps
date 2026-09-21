@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0E538C8AD283797D4186A398 /* CSVExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFDF4DE4D9B9CDE1B013167E /* CSVExportTests.swift */; };
+		46A17BE5C51ECEE95ED7CC12 /* ICloudExportSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1752A1BB5B45F47EEF25D9AD /* ICloudExportSection.swift */; };
+		52DD394A9E74C64D87D40EE2 /* CSVExportGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8872EDA4A117F9738FB67AF3 /* CSVExportGenerator.swift */; };
+		5A606EDF5B86CAF8CA5EA819 /* CSVExportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6EC6902FE40365C766F7D6 /* CSVExportModels.swift */; };
+		D37DFF5A151D0123EE70D1B8 /* ICloudExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7AC441C8965F72E2B587E6 /* ICloudExportService.swift */; };
 		05F9A583349EAC0BC386EE83 /* ScreenshotSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2456B1B7A0C4ACE41BB3684E /* ScreenshotSeeder.swift */; };
 		06B12AAB2EB390D1863D8251 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2F531606F4408AE0B32B118 /* Assets.xcassets */; };
 		0787761CE9DD46121F7DF8A3 /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD935686F580D50455530119 /* NotificationServiceTests.swift */; };
@@ -97,6 +102,11 @@
 
 /* Begin PBXFileReference section */
 		0441871ABDC563C063788A35 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
+		1752A1BB5B45F47EEF25D9AD /* ICloudExportSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudExportSection.swift; sourceTree = "<group>"; };
+		1E6EC6902FE40365C766F7D6 /* CSVExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportModels.swift; sourceTree = "<group>"; };
+		8872EDA4A117F9738FB67AF3 /* CSVExportGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportGenerator.swift; sourceTree = "<group>"; };
+		AFDF4DE4D9B9CDE1B013167E /* CSVExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportTests.swift; sourceTree = "<group>"; };
+		CD7AC441C8965F72E2B587E6 /* ICloudExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudExportService.swift; sourceTree = "<group>"; };
 		05114FB97BFE953DB1E69375 /* ImageCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCompressor.swift; sourceTree = "<group>"; };
 		07759C9F6ACCE257531C659F /* BodyOpsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsApp.swift; sourceTree = "<group>"; };
 		122D8B90907DED0A4F6BF160 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -203,7 +213,10 @@
 			children = (
 				B2FB3B9310514DD937AC1A21 /* AIClient.swift */,
 				92237670EAA4FB72C35C1D68 /* ChatHistoryStore.swift */,
+				8872EDA4A117F9738FB67AF3 /* CSVExportGenerator.swift */,
+				1E6EC6902FE40365C766F7D6 /* CSVExportModels.swift */,
 				F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */,
+				CD7AC441C8965F72E2B587E6 /* ICloudExportService.swift */,
 				25BCC8D85B066F0248D6D6BF /* KeychainService.swift */,
 				C30A0B031BF2AE537623017C /* LLMAPIService.swift */,
 				341C5706E033CB8EF5AC5CDB /* LLMSettingsStore.swift */,
@@ -302,6 +315,7 @@
 			children = (
 				B75D19B800CA7B1FFCE0B0F6 /* AISettingsSections.swift */,
 				EB6BE0CC757F655128A8F4DC /* ExerciseManagementSection.swift */,
+				1752A1BB5B45F47EEF25D9AD /* ICloudExportSection.swift */,
 				AD3B6A7919CD282F3E7E23D1 /* NotificationSettingsSection.swift */,
 				B2971A25301560B81024EEE3 /* SettingsView.swift */,
 			);
@@ -331,6 +345,7 @@
 			isa = PBXGroup;
 			children = (
 				9A98EDB1F197EB273DC68DB3 /* BodyOpsTests.swift */,
+				AFDF4DE4D9B9CDE1B013167E /* CSVExportTests.swift */,
 				502FA1EE447D4F9A8BFDF116 /* ChatHistoryStoreTests.swift */,
 				5AA6511BD5CD068EA48FA86B /* ChatMessageNormalizationTests.swift */,
 				3069A86FDD6499591A73D469 /* ExercisePresetServiceTests.swift */,
@@ -511,6 +526,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5954ECE988918992693AA9A9 /* BodyOpsTests.swift in Sources */,
+				0E538C8AD283797D4186A398 /* CSVExportTests.swift in Sources */,
 				2D8864E2AB82A646DA3891BC /* ChatHistoryStoreTests.swift in Sources */,
 				E69B189C6991A06B52295A25 /* ChatMessageNormalizationTests.swift in Sources */,
 				6A44E5E995E8A4AC45B890ED /* ExercisePresetServiceTests.swift in Sources */,
@@ -533,6 +549,8 @@
 				913FF267B9E27918D80E38A8 /* APIUsageRecord.swift in Sources */,
 				EA4B83BBD406ECB1204F1549 /* BodyOpsApp.swift in Sources */,
 				E00BDC51C487CFCB319944DF /* CSVImportSheet.swift in Sources */,
+				52DD394A9E74C64D87D40EE2 /* CSVExportGenerator.swift in Sources */,
+				5A606EDF5B86CAF8CA5EA819 /* CSVExportModels.swift in Sources */,
 				8C406FA08E6DC35EE9C5DACB /* CalendarExtensions.swift in Sources */,
 				87DF2D47C36A99F236951CF4 /* CameraPickerView.swift in Sources */,
 				E197F4E4875AECAC4F94CFFE /* ChatHistoryStore.swift in Sources */,
@@ -549,6 +567,8 @@
 				7D6A8928844D3DB2EBF445E1 /* GeminiPayloads.swift in Sources */,
 				FB71C647D30D9FA28F315CCF /* GraphView.swift in Sources */,
 				FFFFB57C485F0971793DB58A /* HistoryContentView.swift in Sources */,
+				46A17BE5C51ECEE95ED7CC12 /* ICloudExportSection.swift in Sources */,
+				D37DFF5A151D0123EE70D1B8 /* ICloudExportService.swift in Sources */,
 				08CEBD7A5613D06931361D08 /* ImageCompressor.swift in Sources */,
 				17CEABDCBB50C9C45146A721 /* KeyboardDismiss.swift in Sources */,
 				AE4A7D1830E634D56900F9D7 /* KeychainService.swift in Sources */,

@@ -41,6 +41,7 @@ struct SettingsView: View {
                     notificationTime: $notificationTime
                 )
                 ExerciseManagementSection()
+                ICloudExportSection()
             }
             .scrollDismissesKeyboard(.immediately)
             .keyboardDoneButton()

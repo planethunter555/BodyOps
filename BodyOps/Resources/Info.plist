@@ -24,6 +24,18 @@
 	<string>食事の写真を撮影してAIが栄養を分析します</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>食事の写真を選択してAIが栄養を分析します</string>
+	<key>NSUbiquitousContainers</key>
+	<dict>
+		<key>iCloud.com.bodyops.app</key>
+		<dict>
+			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
+			<true/>
+			<key>NSUbiquitousContainerName</key>
+			<string>BodyOps</string>
+			<key>NSUbiquitousContainerSupportedFolderLevels</key>
+			<string>Any</string>
+		</dict>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

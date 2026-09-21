@@ -127,6 +127,7 @@ struct WorkoutRecordSheet: View {
         session.totalVolume = totalVolume
         modelContext.insert(session)
         try? modelContext.save()
+        ICloudExportService.shared.scheduleExport(context: modelContext)
         exercises.removeAll { $0.id == entry.id }
         if exercises.isEmpty { dismiss() }
     }
@@ -172,6 +173,7 @@ struct WorkoutRecordSheet: View {
             modelContext.insert(session)
         }
         try? modelContext.save()
+        ICloudExportService.shared.scheduleExport(context: modelContext)
         dismiss()
     }
 
