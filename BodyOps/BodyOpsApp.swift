@@ -16,7 +16,9 @@ struct BodyOpsApp: App {
             MealRecord.self,
             NotificationSetting.self,
             LLMSetting.self,
-            APIUsageRecord.self
+            APIUsageRecord.self,
+            IntakeSyncSetting.self,
+            IntakeOutboxItem.self
         ])
         do {
             container = try ModelContainer(for: schema)
@@ -36,6 +38,9 @@ struct BodyOpsApp: App {
                         try? service.seedIfNeeded()
                         if ScreenshotSeeder.isEnabled {
                             ScreenshotSeeder.seed(into: c.mainContext)
+                        }
+                        Task { @MainActor in
+                            await IntakeSyncService(context: c.mainContext).flushPending()
                         }
                     }
                     .modelContainer(c)

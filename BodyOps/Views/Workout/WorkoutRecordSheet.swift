@@ -113,6 +113,7 @@ struct WorkoutRecordSheet: View {
     private func saveExercise(_ entry: WorkoutExerciseEntry) {
         let session = WorkoutSession(date: date, memo: sessionMemo)
         var totalVolume = 0.0
+        var savedSets: [WorkoutSet] = []
         for setEntry in entry.sets {
             let workoutSet = WorkoutSet(
                 setNumber: setEntry.setNumber,
@@ -123,15 +124,19 @@ struct WorkoutRecordSheet: View {
             )
             totalVolume += setEntry.volume
             modelContext.insert(workoutSet)
+            savedSets.append(workoutSet)
         }
         session.totalVolume = totalVolume
         modelContext.insert(session)
         try? modelContext.save()
+        enqueueWorkoutForIntake(session, sets: savedSets)
         exercises.removeAll { $0.id == entry.id }
         if exercises.isEmpty { dismiss() }
     }
 
     private func saveSession() {
+        var savedSession: WorkoutSession?
+        var savedSets: [WorkoutSet] = []
         if let session = editingSession {
             // 編集モード: 既存のセットを削除して再作成
             for set in prefillService.loadSets(for: session) { modelContext.delete(set) }
@@ -148,9 +153,11 @@ struct WorkoutRecordSheet: View {
                     )
                     totalVolume += setEntry.volume
                     modelContext.insert(workoutSet)
+                    savedSets.append(workoutSet)
                 }
             }
             session.totalVolume = totalVolume
+            savedSession = session
         } else {
             // 新規作成
             let session = WorkoutSession(date: date, memo: sessionMemo)
@@ -166,13 +173,29 @@ struct WorkoutRecordSheet: View {
                     )
                     totalVolume += setEntry.volume
                     modelContext.insert(workoutSet)
+                    savedSets.append(workoutSet)
                 }
             }
             session.totalVolume = totalVolume
             modelContext.insert(session)
+            savedSession = session
         }
         try? modelContext.save()
+        if let savedSession {
+            enqueueWorkoutForIntake(savedSession, sets: savedSets)
+        }
         dismiss()
+    }
+
+    private func enqueueWorkoutForIntake(_ session: WorkoutSession, sets: [WorkoutSet]) {
+        do {
+            try IntakeSyncService(context: modelContext).enqueue(session: session, sets: sets)
+            Task { @MainActor in
+                await IntakeSyncService(context: modelContext).flushPending()
+            }
+        } catch {
+            // ローカル保存を優先する。同期失敗は outbox/次回保存時の再送に任せる。
+        }
     }
 
 }

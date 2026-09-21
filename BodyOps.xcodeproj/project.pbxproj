@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A10000000000000000000001 /* IntakeOutboxItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* IntakeOutboxItem.swift */; };
+		A10000000000000000000002 /* IntakeSyncSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* IntakeSyncSetting.swift */; };
+		A10000000000000000000003 /* IntakeSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* IntakeSyncService.swift */; };
+		A10000000000000000000004 /* IntakeSyncSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* IntakeSyncSettingsSection.swift */; };
+		A10000000000000000000005 /* IntakeSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* IntakeSyncServiceTests.swift */; };
 		05F9A583349EAC0BC386EE83 /* ScreenshotSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2456B1B7A0C4ACE41BB3684E /* ScreenshotSeeder.swift */; };
 		06B12AAB2EB390D1863D8251 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2F531606F4408AE0B32B118 /* Assets.xcassets */; };
 		0787761CE9DD46121F7DF8A3 /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD935686F580D50455530119 /* NotificationServiceTests.swift */; };
@@ -96,6 +101,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A10000000000000000000011 /* IntakeOutboxItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntakeOutboxItem.swift; sourceTree = "<group>"; };
+		A10000000000000000000012 /* IntakeSyncSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntakeSyncSetting.swift; sourceTree = "<group>"; };
+		A10000000000000000000013 /* IntakeSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntakeSyncService.swift; sourceTree = "<group>"; };
+		A10000000000000000000014 /* IntakeSyncSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntakeSyncSettingsSection.swift; sourceTree = "<group>"; };
+		A10000000000000000000015 /* IntakeSyncServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntakeSyncServiceTests.swift; sourceTree = "<group>"; };
 		0441871ABDC563C063788A35 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
 		05114FB97BFE953DB1E69375 /* ImageCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCompressor.swift; sourceTree = "<group>"; };
 		07759C9F6ACCE257531C659F /* BodyOpsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyOpsApp.swift; sourceTree = "<group>"; };
@@ -205,6 +215,7 @@
 				92237670EAA4FB72C35C1D68 /* ChatHistoryStore.swift */,
 				F90F7B1B6BBC5B351734C600 /* ExercisePresetService.swift */,
 				25BCC8D85B066F0248D6D6BF /* KeychainService.swift */,
+				A10000000000000000000013 /* IntakeSyncService.swift */,
 				C30A0B031BF2AE537623017C /* LLMAPIService.swift */,
 				341C5706E033CB8EF5AC5CDB /* LLMSettingsStore.swift */,
 				5A008493943BB5DBD28C16AC /* ModelListService.swift */,
@@ -302,6 +313,7 @@
 			children = (
 				B75D19B800CA7B1FFCE0B0F6 /* AISettingsSections.swift */,
 				EB6BE0CC757F655128A8F4DC /* ExerciseManagementSection.swift */,
+				A10000000000000000000014 /* IntakeSyncSettingsSection.swift */,
 				AD3B6A7919CD282F3E7E23D1 /* NotificationSettingsSection.swift */,
 				B2971A25301560B81024EEE3 /* SettingsView.swift */,
 			);
@@ -334,6 +346,7 @@
 				502FA1EE447D4F9A8BFDF116 /* ChatHistoryStoreTests.swift */,
 				5AA6511BD5CD068EA48FA86B /* ChatMessageNormalizationTests.swift */,
 				3069A86FDD6499591A73D469 /* ExercisePresetServiceTests.swift */,
+				A10000000000000000000015 /* IntakeSyncServiceTests.swift */,
 				0441871ABDC563C063788A35 /* KeychainServiceTests.swift */,
 				773CE6629CF7CBB5B29CFF51 /* LLMAPIServiceTests.swift */,
 				DD935686F580D50455530119 /* NotificationServiceTests.swift */,
@@ -359,6 +372,8 @@
 				E9BD8F22F87768FB6081B46F /* APIUsageRecord.swift */,
 				F17175B8BE749EB90DD6367B /* ChatMessage.swift */,
 				4AF56C072AF9DB26469C43DD /* Exercise.swift */,
+				A10000000000000000000011 /* IntakeOutboxItem.swift */,
+				A10000000000000000000012 /* IntakeSyncSetting.swift */,
 				D0D5C06DA30A95D967A4F6F6 /* LLMSetting.swift */,
 				478DD797EBEC237296B4035A /* MealRecord.swift */,
 				ECB9DED9FA2F5DDA0EA12822 /* NotificationSetting.swift */,
@@ -515,6 +530,7 @@
 				E69B189C6991A06B52295A25 /* ChatMessageNormalizationTests.swift in Sources */,
 				6A44E5E995E8A4AC45B890ED /* ExercisePresetServiceTests.swift in Sources */,
 				1B3800E8372352B996171DD3 /* KeychainServiceTests.swift in Sources */,
+				A10000000000000000000005 /* IntakeSyncServiceTests.swift in Sources */,
 				0D489E4CAD3C42D53222D2C3 /* LLMAPIServiceTests.swift in Sources */,
 				0787761CE9DD46121F7DF8A3 /* NotificationServiceTests.swift in Sources */,
 				DD57E97F94EE6AE21526C6F3 /* SystemPromptBuilderTests.swift in Sources */,
@@ -552,6 +568,9 @@
 				08CEBD7A5613D06931361D08 /* ImageCompressor.swift in Sources */,
 				17CEABDCBB50C9C45146A721 /* KeyboardDismiss.swift in Sources */,
 				AE4A7D1830E634D56900F9D7 /* KeychainService.swift in Sources */,
+				A10000000000000000000001 /* IntakeOutboxItem.swift in Sources */,
+				A10000000000000000000002 /* IntakeSyncSetting.swift in Sources */,
+				A10000000000000000000003 /* IntakeSyncService.swift in Sources */,
 				63211D5E371BE96A68E9E670 /* LLMAPIService.swift in Sources */,
 				B31D49641DC97EF97EFE036A /* LLMSetting.swift in Sources */,
 				B284926AA169E03F47F47CA0 /* LLMSettingsStore.swift in Sources */,
@@ -564,6 +583,7 @@
 				21C9E90D4820732B497307CA /* MonthCalendarView.swift in Sources */,
 				A5CE4CFB7332DC3A886AD642 /* NotificationService.swift in Sources */,
 				0A48AAD7F6825C96FDE772FD /* NotificationSetting.swift in Sources */,
+				A10000000000000000000004 /* IntakeSyncSettingsSection.swift in Sources */,
 				996B93F926DD7A4C10D9CA86 /* NotificationSettingsSection.swift in Sources */,
 				69F90F6E8559CB79E8CF6133 /* OnDeviceAvailability.swift in Sources */,
 				0FB5D9BA3F77F448741F8CB2 /* OnDeviceLLMService.swift in Sources */,

@@ -3,6 +3,7 @@ import Security
 
 final class KeychainService: @unchecked Sendable {
     static let shared = KeychainService()
+    private static let intakeTokenKey = "com.bodyops.intake.token"
 
     private init() {}
 
@@ -10,19 +11,16 @@ final class KeychainService: @unchecked Sendable {
         "com.bodyops.apikey.\(provider.rawValue)"
     }
 
-    func save(apiKey: String, forProvider provider: LLMProvider) throws {
-        let keyString = key(for: provider)
+    private func save(_ value: String, keyString: String) throws {
         let keychainKey = keyString as CFString
 
-        // Empty string treated as deletion
-        if apiKey.isEmpty {
-            try? delete(forProvider: provider)
+        if value.isEmpty {
+            try? delete(keyString: keyString)
             return
         }
 
-        guard let data = apiKey.data(using: .utf8) else { return }
+        guard let data = value.data(using: .utf8) else { return }
 
-        // Delete existing entry first
         let deleteQuery: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: keychainKey
@@ -41,8 +39,8 @@ final class KeychainService: @unchecked Sendable {
         }
     }
 
-    func load(forProvider provider: LLMProvider) -> String? {
-        let keychainKey = key(for: provider) as CFString
+    private func load(keyString: String) -> String? {
+        let keychainKey = keyString as CFString
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: keychainKey,
@@ -60,8 +58,8 @@ final class KeychainService: @unchecked Sendable {
         return key
     }
 
-    func delete(forProvider provider: LLMProvider) throws {
-        let keychainKey = key(for: provider) as CFString
+    private func delete(keyString: String) throws {
+        let keychainKey = keyString as CFString
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: keychainKey
@@ -70,6 +68,30 @@ final class KeychainService: @unchecked Sendable {
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw KeychainError.deleteFailed(status)
         }
+    }
+
+    func save(apiKey: String, forProvider provider: LLMProvider) throws {
+        try save(apiKey, keyString: key(for: provider))
+    }
+
+    func load(forProvider provider: LLMProvider) -> String? {
+        load(keyString: key(for: provider))
+    }
+
+    func delete(forProvider provider: LLMProvider) throws {
+        try delete(keyString: key(for: provider))
+    }
+
+    func saveIntakeToken(_ token: String) throws {
+        try save(token, keyString: Self.intakeTokenKey)
+    }
+
+    func loadIntakeToken() -> String? {
+        load(keyString: Self.intakeTokenKey)
+    }
+
+    func deleteIntakeToken() throws {
+        try delete(keyString: Self.intakeTokenKey)
     }
 }
 

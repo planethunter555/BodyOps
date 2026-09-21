@@ -230,6 +230,7 @@ final class MealRecordViewModel {
         meal.fat = fat
         meal.carbs = carbs
         try? context.save()
+        enqueueMealForIntake(meal, context: context)
     }
 
     func save(date: Date, context: ModelContext) {
@@ -245,6 +246,7 @@ final class MealRecordViewModel {
         record.recordedAt = resolvedDate(for: date)
         context.insert(record)
         try? context.save()
+        enqueueMealForIntake(record, context: context)
     }
 
     // MARK: - Private
@@ -344,5 +346,16 @@ final class MealRecordViewModel {
 
     private func resolvedDate(for date: Date) -> Date {
         Calendar.current.isDateInToday(date) ? Date() : date
+    }
+
+    private func enqueueMealForIntake(_ meal: MealRecord, context: ModelContext) {
+        do {
+            try IntakeSyncService(context: context).enqueue(meal: meal)
+            Task { @MainActor in
+                await IntakeSyncService(context: context).flushPending()
+            }
+        } catch {
+            // ローカル保存を優先する。同期できない場合は次回の保存/起動時に再送を試す。
+        }
     }
 }

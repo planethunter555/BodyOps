@@ -35,6 +35,7 @@ struct SettingsView: View {
                 goalSection
                 AISettingsSections()
                 promptSection
+                IntakeSyncSettingsSection()
                 NotificationSettingsSection(
                     notificationsEnabled: $notificationsEnabled,
                     selectedWeekdays: $selectedWeekdays,
