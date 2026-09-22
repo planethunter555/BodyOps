@@ -26,6 +26,45 @@ final class ModelContainerConfigurationTests: XCTestCase {
             try ModelContainer(for: schema, configurations: configuration)
         )
     }
+
+    func test_modelContainerDiagnostics_format_includesNestedNSErrorDetails() {
+        let deepest = NSError(
+            domain: "BodyOps.DeepError",
+            code: 300,
+            userInfo: ["deep-key": "deep-value"]
+        )
+        let underlying = NSError(
+            domain: "BodyOps.UnderlyingError",
+            code: 200,
+            userInfo: [
+                "underlying-key": "underlying-value",
+                NSUnderlyingErrorKey: deepest
+            ]
+        )
+        let error = NSError(
+            domain: "BodyOps.TopError",
+            code: 100,
+            userInfo: [
+                "top-key": "top-value",
+                NSUnderlyingErrorKey: underlying
+            ]
+        )
+
+        let formatted = ModelContainerDiagnostics.format(error: error)
+
+        XCTAssertTrue(formatted.contains("BodyOps.TopError"))
+        XCTAssertTrue(formatted.contains("code: 100"))
+        XCTAssertTrue(formatted.contains("top-key"))
+        XCTAssertTrue(formatted.contains("top-value"))
+        XCTAssertTrue(formatted.contains("BodyOps.UnderlyingError"))
+        XCTAssertTrue(formatted.contains("code: 200"))
+        XCTAssertTrue(formatted.contains("underlying-key"))
+        XCTAssertTrue(formatted.contains("underlying-value"))
+        XCTAssertTrue(formatted.contains("BodyOps.DeepError"))
+        XCTAssertTrue(formatted.contains("code: 300"))
+        XCTAssertTrue(formatted.contains("deep-key"))
+        XCTAssertTrue(formatted.contains("deep-value"))
+    }
 }
 
 final class CSVExportGeneratorTests: XCTestCase {
