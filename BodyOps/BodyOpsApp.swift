@@ -19,7 +19,8 @@ struct BodyOpsApp: App {
             APIUsageRecord.self
         ])
         do {
-            container = try ModelContainer(for: schema)
+            let configuration = ModelConfiguration(schema: schema, cloudKitDatabase: .none)
+            container = try ModelContainer(for: schema, configurations: configuration)
             initError = nil
         } catch {
             container = nil

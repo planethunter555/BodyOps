@@ -2,6 +2,32 @@ import XCTest
 import SwiftData
 @testable import BodyOps
 
+final class ModelContainerConfigurationTests: XCTestCase {
+
+    func test_appSchema_withCloudKitDisabled_createsInMemoryContainer() throws {
+        let schema = Schema([
+            UserProfile.self,
+            Exercise.self,
+            WorkoutSession.self,
+            WorkoutSet.self,
+            ChatMessage.self,
+            MealRecord.self,
+            NotificationSetting.self,
+            LLMSetting.self,
+            APIUsageRecord.self
+        ])
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+
+        XCTAssertNoThrow(
+            try ModelContainer(for: schema, configurations: configuration)
+        )
+    }
+}
+
 final class CSVExportGeneratorTests: XCTestCase {
 
     // MARK: - Workouts
