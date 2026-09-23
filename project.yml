@@ -21,6 +21,7 @@ targets:
       - path: BodyOps
         excludes:
           - "**/*.md"
+          - "Resources/BodyOps.entitlements"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bodyops.app
