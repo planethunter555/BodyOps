@@ -252,27 +252,78 @@ final class ICloudCSVWriterTests: XCTestCase {
         XCTAssertEqual(outcome1, outcome2)
     }
 
-    func test_write_writesBothCSVFilesToResolvedContainer() throws {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
+    /// CSV は Finder / 「ファイル」アプリから見える Documents サブディレクトリ配下に書かれる。
+    func test_write_writesBothCSVFilesIntoDocumentsSubdirectory() throws {
+        let container = makeTemporaryContainer()
+        defer { try? FileManager.default.removeItem(at: container) }
 
         let outcome = ICloudCSVWriter.write(
             workoutRows: [],
             mealRows: [],
             containerIdentifier: ICloudExportService.containerIdentifier,
-            containerURLProvider: { _ in directory }
+            containerURLProvider: { _ in container }
         )
 
+        let documents = container.appendingPathComponent("Documents", isDirectory: true)
         XCTAssertEqual(outcome, .success)
         XCTAssertEqual(
-            try String(contentsOf: directory.appendingPathComponent("bodyops_workouts.csv"), encoding: .utf8),
+            try String(contentsOf: documents.appendingPathComponent("bodyops_workouts.csv"), encoding: .utf8),
             CSVExportGenerator.workoutsHeader + "\r\n"
         )
         XCTAssertEqual(
-            try String(contentsOf: directory.appendingPathComponent("bodyops_meals.csv"), encoding: .utf8),
+            try String(contentsOf: documents.appendingPathComponent("bodyops_meals.csv"), encoding: .utf8),
             CSVExportGenerator.mealsHeader + "\r\n"
         )
+    }
+
+    /// 回帰防止: コンテナ直下には CSV を作らない（直下だと Finder / 「ファイル」アプリに出ない）。
+    func test_write_doesNotWriteCSVFilesAtContainerRoot() throws {
+        let container = makeTemporaryContainer()
+        defer { try? FileManager.default.removeItem(at: container) }
+
+        let outcome = ICloudCSVWriter.write(
+            workoutRows: [],
+            mealRows: [],
+            containerIdentifier: ICloudExportService.containerIdentifier,
+            containerURLProvider: { _ in container }
+        )
+
+        XCTAssertEqual(outcome, .success)
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: container.appendingPathComponent("bodyops_workouts.csv").path)
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: container.appendingPathComponent("bodyops_meals.csv").path)
+        )
+    }
+
+    /// 既存の Documents ディレクトリとその中の無関係なファイルを消さない。
+    func test_write_preservesExistingDocumentsDirectoryContents() throws {
+        let container = makeTemporaryContainer()
+        defer { try? FileManager.default.removeItem(at: container) }
+
+        let documents = container.appendingPathComponent("Documents", isDirectory: true)
+        try FileManager.default.createDirectory(at: documents, withIntermediateDirectories: true)
+        let unrelated = documents.appendingPathComponent("unrelated.txt")
+        try "keep-me".write(to: unrelated, atomically: true, encoding: .utf8)
+
+        let outcome = ICloudCSVWriter.write(
+            workoutRows: [],
+            mealRows: [],
+            containerIdentifier: ICloudExportService.containerIdentifier,
+            containerURLProvider: { _ in container }
+        )
+
+        XCTAssertEqual(outcome, .success)
+        XCTAssertEqual(try String(contentsOf: unrelated, encoding: .utf8), "keep-me")
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: documents.appendingPathComponent("bodyops_workouts.csv").path)
+        )
+    }
+
+    private func makeTemporaryContainer() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
     }
 }
 

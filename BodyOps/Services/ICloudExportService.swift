@@ -26,9 +26,14 @@ enum ICloudCSVWriter {
             return .unavailable
         }
         do {
-            try fileManager.createDirectory(at: containerURL, withIntermediateDirectories: true)
-            let workoutsURL = containerURL.appendingPathComponent("bodyops_workouts.csv")
-            let mealsURL = containerURL.appendingPathComponent("bodyops_meals.csv")
+            // Finder の iCloud Drive や iPhone の「ファイル」アプリに公開されるのは
+            // Documents サブディレクトリの中身だけなので、CSV は必ずその配下に置く。
+            // withIntermediateDirectories: true は既存ディレクトリでもエラーにならず、
+            // 既にある Documents とその中身を削除・上書きすることもない。
+            let documentsURL = containerURL.appendingPathComponent("Documents", isDirectory: true)
+            try fileManager.createDirectory(at: documentsURL, withIntermediateDirectories: true)
+            let workoutsURL = documentsURL.appendingPathComponent("bodyops_workouts.csv")
+            let mealsURL = documentsURL.appendingPathComponent("bodyops_meals.csv")
             try CSVExportGenerator.workoutsCSV(rows: workoutRows).write(to: workoutsURL, atomically: true, encoding: .utf8)
             try CSVExportGenerator.mealsCSV(rows: mealRows).write(to: mealsURL, atomically: true, encoding: .utf8)
             return .success
