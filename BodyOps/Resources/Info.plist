@@ -22,6 +22,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>食事の写真を撮影してAIが栄養を分析します</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>GarminやeufyなどからApple ヘルスケアに集まった睡眠・安静時心拍・歩数・消費エネルギー・体組成の記録を読み込み、筋トレや食事の記録と合わせて表示・書き出すために使用します。ヘルスケアへの書き込みは行いません。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>食事の写真を選択してAIが栄養を分析します</string>
 	<key>NSUbiquitousContainers</key>

@@ -34,6 +34,11 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: YES
         # FoundationModels(iOS 26+)は #if canImport + @available ガードにより
         # iOS 26 SDKビルド時に自動でweak linkされる（明示フラグは旧SDKでリンクエラーになるため付けない）
+    # Apple ヘルスケア（HealthKit）は読み取り専用で使う。
+    # entitlements の com.apple.developer.healthkit と Info.plist の NSHealthShareUsageDescription が対応。
+    # NSHealthUpdateUsageDescription は付けない（書き込まないため）。
+    dependencies:
+      - sdk: HealthKit.framework
     entitlements:
       path: BodyOps/Resources/BodyOps.entitlements
 
